@@ -7,8 +7,11 @@ export default function Home() {
   const { products } = useProducts()
   const { settings } = useSettings()
   const hero = settings.hero || {}
-  const featured = products.filter(p => p.is_featured).slice(0, 6)
-  const list = featured.length ? featured : products.slice(0, 6)
+  // Show ALL products on the homepage. Featured ones come first (if any flagged),
+  // then the rest — so the section always reflects the full catalog.
+  const featured = products.filter(p => p.is_featured)
+  const rest = products.filter(p => !p.is_featured)
+  const list = [...featured, ...rest]
 
   return (
     <>
@@ -43,8 +46,8 @@ export default function Home() {
       <section className="section">
         <div className="container">
           <div className="section-head">
-            <div className="eyebrow">Bestsellers</div>
-            <h2>Featured Candles</h2>
+            <div className="eyebrow">Our Candles</div>
+            <h2>The Collection</h2>
           </div>
           <div className="grid">
             {list.map(p => <ProductCard key={p.id} p={p} />)}
