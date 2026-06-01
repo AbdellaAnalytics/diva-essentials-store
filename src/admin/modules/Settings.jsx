@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check } from 'lucide-react'
+import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck } from 'lucide-react'
 import { AC, serif, sans, Panel, Btn, SectionTitle } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { saveSettings, DEFAULT_SETTINGS } from '../../lib/useSettings'
@@ -39,6 +39,7 @@ export default function Settings({ data, reload }) {
   const [tab, setTab] = useState('integrations')
   const tabs = [
     { id: 'integrations', label: 'Integrations', icon: Plug },
+    { id: 'shipping', label: 'Shipping', icon: Truck },
     { id: 'hero', label: 'Hero Section', icon: Megaphone },
     { id: 'pages', label: 'Pages', icon: FileText },
   ]
@@ -55,6 +56,7 @@ export default function Settings({ data, reload }) {
         ))}
       </div>
       {tab === 'integrations' && <Integrations />}
+      {tab === 'shipping' && <ShippingEditor settings={data} />}
       {tab === 'hero' && <HeroEditor settings={data} />}
       {tab === 'pages' && <PagesEditor settings={data} />}
     </div>
@@ -234,6 +236,72 @@ function HeroEditor({ settings }) {
   )
 }
 
+// ---------------- Shipping editor ----------------
+function ShippingEditor({ settings }) {
+  const [flat, setFlat] = useState(settings?.shipping_flat ?? 60)
+  const [threshold, setThreshold] = useState(settings?.free_shipping_threshold ?? 2000)
+  const [minOrder, setMinOrder] = useState(settings?.min_order ?? 0)
+  const [cities, setCities] = useState(settings?.shipping_cities || [])
+  const [saved, setSaved] = useState(false)
+
+  const addCity = () => setCities([...cities, { city: '', price: '' }])
+  const setCity = (i, k, v) => setCities(cities.map((c, idx) => idx === i ? { ...c, [k]: v } : c))
+  const delCity = (i) => setCities(cities.filter((_, idx) => idx !== i))
+
+  const save = async () => {
+    const clean = cities.filter(c => (c.city || '').trim()).map(c => ({ city: c.city.trim(), price: Number(c.price) || 0 }))
+    await saveSettings({
+      shipping_flat: Number(flat) || 0,
+      free_shipping_threshold: Number(threshold) || 0,
+      min_order: Number(minOrder) || 0,
+      shipping_cities: clean,
+    })
+    setCities(clean); setSaved(true); setTimeout(() => setSaved(false), 1800)
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <Panel title="Rates & Thresholds">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 }}>
+          <div>
+            <label style={lbl}>Default shipping rate (EGP)</label>
+            <input type="number" style={inp} value={flat} onChange={e => setFlat(e.target.value)} />
+            <p style={hint}>Used for any city without a specific rate below.</p>
+          </div>
+          <div>
+            <label style={lbl}>Free shipping over (EGP)</label>
+            <input type="number" style={inp} value={threshold} onChange={e => setThreshold(e.target.value)} />
+            <p style={hint}>Set 0 to disable free shipping.</p>
+          </div>
+          <div>
+            <label style={lbl}>Minimum order (EGP)</label>
+            <input type="number" style={inp} value={minOrder} onChange={e => setMinOrder(e.target.value)} />
+            <p style={hint}>Set 0 for no minimum. Blocks checkout below this.</p>
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Per-City Rates" action={<Btn variant="ghost" onClick={addCity}><Plus size={14} /> Add City</Btn>}>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {cities.map((c, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 40px', gap: 8, alignItems: 'center' }}>
+              <input style={inp} value={c.city} onChange={e => setCity(i, 'city', e.target.value)} placeholder="City / Governorate (e.g. Cairo)" />
+              <input type="number" style={inp} value={c.price} onChange={e => setCity(i, 'price', e.target.value)} placeholder="Price EGP" />
+              <button onClick={() => delCity(i)} style={iconBtn}><Trash2 size={16} color={AC.red} /></button>
+            </div>
+          ))}
+          {cities.length === 0 && <p style={{ color: AC.sub, fontSize: 13 }}>No city rates yet — the default rate applies everywhere. Add cities to override.</p>}
+        </div>
+        <p style={hint}>City must match what customers type at checkout (case-insensitive). Keep names simple, e.g. "Cairo", "Giza", "Alexandria".</p>
+      </Panel>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Btn variant="solid" onClick={save}>{saved ? <><Check size={15} /> Saved</> : <><Save size={15} /> Save Shipping</>}</Btn>
+      </div>
+    </div>
+  )
+}
+
 // ---------------- Pages editor ----------------
 function PagesEditor({ settings }) {
   const [about, setAbout] = useState(settings?.about_html || '')
@@ -261,5 +329,6 @@ function PagesEditor({ settings }) {
 
 const inp = { width: '100%', padding: '11px 13px', border: `1px solid ${AC.line}`, borderRadius: 9, fontSize: 14, fontFamily: sans, color: AC.ink, background: AC.bg, boxSizing: 'border-box' }
 const lbl = { display: 'block', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: AC.sub, marginBottom: 6 }
+const hint = { fontSize: 12, color: AC.sub, marginTop: 6, marginBottom: 0, lineHeight: 1.5 }
 const btnGhost = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 14px', border: `1px solid ${AC.line}`, borderRadius: 9, background: 'transparent', fontSize: 13, fontFamily: sans, cursor: 'pointer', color: AC.ink }
 const iconBtn = { background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, display: 'inline-flex' }

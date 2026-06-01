@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   LayoutDashboard, BarChart3, Boxes, ClipboardList, Users, CreditCard,
-  FileBarChart, LogOut, Menu, X, Flame, Package, Settings as SettingsIcon,
+  FileBarChart, LogOut, Menu, X, Flame, Package, Settings as SettingsIcon, Truck,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAdminData } from './lib/useAdminData'
@@ -14,6 +14,7 @@ import Orders from './modules/Orders'
 import Customers from './modules/Customers'
 import Approvals from './modules/Approvals'
 import Reports from './modules/Reports'
+import Shipments from './modules/Shipments'
 import Settings from './modules/Settings'
 import { useSettings } from '../lib/useSettings'
 
@@ -25,6 +26,7 @@ const NAV = [
   { id: 'products', label: 'Products', icon: Package },
   { id: 'inventory', label: 'Inventory', icon: Boxes },
   { id: 'orders', label: 'Orders', icon: ClipboardList },
+  { id: 'shipments', label: 'Shipments', icon: Truck },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'approvals', label: 'Approvals', icon: CreditCard },
   { id: 'reports', label: 'Reports', icon: FileBarChart },
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
     customers: <Customers data={data} />,
     approvals: <Approvals data={data} onDecision={decideProof} />,
     reports: <Reports data={data} />,
+    shipments: <Shipments />,
     settings: <Settings data={settings} reload={data.reload} />,
   }[page]
 
