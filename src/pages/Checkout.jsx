@@ -4,34 +4,38 @@ import { CreditCard, Wallet, Smartphone, Banknote } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useUI } from '../context/UIContext'
 import { supabase } from '../lib/supabase'
+import { useSettings, computeShipping } from '../lib/useSettings'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
   !import.meta.env.VITE_SUPABASE_URL.includes('YOUR_PROJECT')
 
 const PAYMENTS = [
-  { id: 'stripe',        label: 'Credit / Debit Card',  sub: 'Visa, Mastercard — via Stripe',  icon: CreditCard },
+  { id: 'cod',           label: 'Cash on Delivery',     sub: 'Pay when it arrives',             icon: Banknote },
   { id: 'paymob',        label: 'Paymob',               sub: 'Cards & wallets (Egypt)',         icon: Wallet },
   { id: 'instapay',      label: 'InstaPay / Bank',      sub: 'Transfer + upload proof',         icon: Smartphone },
   { id: 'vodafone_cash', label: 'Vodafone Cash',        sub: 'Transfer + upload proof',         icon: Smartphone },
-  { id: 'cod',           label: 'Cash on Delivery',     sub: 'Pay when it arrives',             icon: Banknote },
+  { id: 'stripe',        label: 'Credit / Debit Card',  sub: 'Visa, Mastercard — via Stripe',  icon: CreditCard },
 ]
 
 export default function Checkout() {
   const { items, subtotal, clear } = useCart()
   const { money } = useUI()
+  const { settings } = useSettings()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', notes: '' })
   const [promo, setPromo] = useState('')
   const [applied, setApplied] = useState(null)
-  const [method, setMethod] = useState('stripe')
+  const [method, setMethod] = useState('cod')   // COD is the default
   const [placing, setPlacing] = useState(false)
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const discount = applied ? Math.round(subtotal * (applied.pct / 100)) : 0
-  const shipping = subtotal - discount >= 2000 || subtotal === 0 ? 0 : 60
+  const shipping = computeShipping(settings, subtotal - discount, form.city)
   const total = subtotal - discount + shipping
+  const minOrder = Number(settings?.min_order) || 0
+  const belowMin = minOrder > 0 && subtotal < minOrder
 
   const applyPromo = () => {
     // DIVA10 hardcoded fallback; real validation hits Supabase promo_codes
@@ -46,6 +50,10 @@ export default function Checkout() {
   const placeOrder = async () => {
     if (!form.name || !form.phone || !form.address) {
       alert('Please fill in your name, phone, and address.')
+      return
+    }
+    if (belowMin) {
+      alert(`Minimum order is ${money(minOrder)}. Please add more items.`)
       return
     }
     setPlacing(true)
@@ -73,7 +81,7 @@ export default function Checkout() {
         if (items.length) {
           await supabase.from('order_items').insert(items.map(i => ({
             order_id: orderId, product_id: typeof i.id === 'number' ? i.id : null,
-            name: i.name, price: i.price, qty: i.qty,
+            name: i.name, price: i.price, quantity: i.qty, line_total: i.price * i.qty,
           })))
         }
       }
@@ -165,7 +173,12 @@ export default function Checkout() {
             <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Shipping</span><span>{shipping === 0 ? 'Free' : money(shipping)}</span></div>
             <div className="foot-row total"><span>Total</span><span>{money(total)}</span></div>
           </div>
-          <button className="btn btn-gold" style={{ width: '100%', marginTop: 10 }} disabled={placing} onClick={placeOrder}>
+          {belowMin && (
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--gold)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--gold-deep)', marginTop: 10 }}>
+              Minimum order is {money(minOrder)}. Add {money(minOrder - subtotal)} more to check out.
+            </div>
+          )}
+          <button className="btn btn-gold" style={{ width: '100%', marginTop: 10 }} disabled={placing || belowMin} onClick={placeOrder}>
             {placing ? 'Processing…' : `Place Order · ${money(total)}`}
           </button>
           <p style={{ color: 'var(--sub)', fontSize: 12, textAlign: 'center', marginTop: 12 }}>
