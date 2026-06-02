@@ -102,8 +102,11 @@ export default function Checkout() {
       }
 
       // instapay / vodafone -> proof upload; cod -> straight to confirmation
-      clear()
+      // Navigate to confirmation FIRST, then clear the cart.
+      // (Clearing before navigation makes the empty-cart guard fire and
+      //  shows the "cart is empty" page instead of the confirmation.)
       navigate('/confirmation', { state: { orderNumber, method, total, orderId } })
+      setTimeout(() => clear(), 0)
     } catch (e) {
       alert('Something went wrong: ' + e.message)
     } finally {
