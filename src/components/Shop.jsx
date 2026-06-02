@@ -104,10 +104,10 @@ export function CartDrawer() {
               <span>Total</span>
               <span>{money(subtotal + shipping)}</span>
             </div>
-            <a href="/checkout" className="btn btn-gold" style={{ width: '100%' }}
+            <Link to="/checkout" className="btn btn-gold" style={{ width: '100%' }}
                onClick={() => setOpen(false)}>
               Proceed to Checkout
-            </a>
+            </Link>
           </div>
         )}
       </aside>
