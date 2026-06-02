@@ -23,7 +23,7 @@ export default function Checkout() {
   const { money } = useUI()
   const { settings } = useSettings()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', notes: '' })
+  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', notes: '', email: '' })
   const [promo, setPromo] = useState('')
   const [applied, setApplied] = useState(null)
   const [method, setMethod] = useState('cod')   // COD is the default
@@ -123,69 +123,91 @@ export default function Checkout() {
   }
 
   return (
-    <div className="container" style={{ padding: '50px 24px' }}>
-      <div className="section-head" style={{ marginBottom: 40 }}>
-        <div className="eyebrow">Almost there</div>
-        <h2>Checkout</h2>
+    <div className="container checkout-wrap" style={{ padding: '46px 24px 80px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 38 }}>
+        <div className="eyebrow" style={{ color: 'var(--gold-deep)', letterSpacing: '.3em', fontSize: 11, textTransform: 'uppercase' }}>Almost there</div>
+        <h2 className="serif" style={{ fontSize: 'clamp(30px,5vw,44px)', fontWeight: 300, marginTop: 8 }}>Checkout</h2>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 48, alignItems: 'start' }}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: 52, alignItems: 'start' }}
            className="checkout-grid">
         {/* LEFT: forms */}
         <div>
-          <h3 className="serif" style={{ fontSize: 24, marginBottom: 18 }}>Shipping Details</h3>
-          <div className="field"><label>Full Name</label><input value={form.name} onChange={set('name')} /></div>
-          <div className="field"><label>Phone</label><input value={form.phone} onChange={set('phone')} placeholder="01XXXXXXXXX" /></div>
-          <div className="field"><label>Address</label><input value={form.address} onChange={set('address')} /></div>
-          <div className="field"><label>City</label><input value={form.city} onChange={set('city')} /></div>
-          <div className="field"><label>Order Notes (optional)</label><textarea rows={2} value={form.notes} onChange={set('notes')} /></div>
+          {/* Contact */}
+          <section className="co-card">
+            <div className="co-step"><span className="co-num">1</span><h3>Contact</h3></div>
+            <div className="co-row">
+              <div className="field"><label>Full Name *</label><input value={form.name} onChange={set('name')} placeholder="Your name" /></div>
+              <div className="field"><label>Phone *</label><input value={form.phone} onChange={set('phone')} placeholder="01XXXXXXXXX" inputMode="tel" /></div>
+            </div>
+            <div className="field"><label>Email (optional)</label><input value={form.email || ''} onChange={set('email')} placeholder="you@email.com" inputMode="email" /></div>
+          </section>
 
-          <h3 className="serif" style={{ fontSize: 24, margin: '28px 0 16px' }}>Payment Method</h3>
-          {PAYMENTS.map(opt => {
-            const Icon = opt.icon
-            return (
-              <label key={opt.id} className={`pay-opt ${method === opt.id ? 'sel' : ''}`}>
-                <input type="radio" name="pay" checked={method === opt.id} onChange={() => setMethod(opt.id)} />
-                <Icon size={20} color="var(--gold)" />
-                <span style={{ flex: 1 }}>
-                  <strong style={{ display: 'block', fontWeight: 500 }}>{opt.label}</strong>
-                  <span style={{ color: 'var(--sub)', fontSize: 13 }}>{opt.sub}</span>
-                </span>
-              </label>
-            )
-          })}
+          {/* Delivery */}
+          <section className="co-card">
+            <div className="co-step"><span className="co-num">2</span><h3>Delivery Address</h3></div>
+            <div className="field"><label>Street Address *</label><input value={form.address} onChange={set('address')} placeholder="Building, street, area" /></div>
+            <div className="co-row">
+              <div className="field"><label>City / Governorate *</label><input value={form.city} onChange={set('city')} placeholder="e.g. Cairo" /></div>
+              <div className="field"><label>Order Notes</label><input value={form.notes} onChange={set('notes')} placeholder="Optional" /></div>
+            </div>
+          </section>
+
+          {/* Payment */}
+          <section className="co-card">
+            <div className="co-step"><span className="co-num">3</span><h3>Payment Method</h3></div>
+            {PAYMENTS.map(opt => {
+              const Icon = opt.icon
+              return (
+                <label key={opt.id} className={`pay-opt ${method === opt.id ? 'sel' : ''}`}>
+                  <input type="radio" name="pay" checked={method === opt.id} onChange={() => setMethod(opt.id)} />
+                  <span className="pay-radio" />
+                  <Icon size={20} color="var(--gold-deep)" />
+                  <span style={{ flex: 1 }}>
+                    <strong style={{ display: 'block', fontWeight: 500 }}>{opt.label}</strong>
+                    <span style={{ color: 'var(--sub)', fontSize: 13 }}>{opt.sub}</span>
+                  </span>
+                </label>
+              )
+            })}
+          </section>
         </div>
 
         {/* RIGHT: summary */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: 26, position: 'sticky', top: 90 }}>
-          <h3 className="serif" style={{ fontSize: 22, marginBottom: 16 }}>Order Summary</h3>
+        <div className="co-summary" style={{ position: 'sticky', top: 90 }}>
+          <h3 className="serif" style={{ fontSize: 22, marginBottom: 18 }}>Order Summary</h3>
           {items.map(i => (
-            <div className="foot-row" key={i.id}>
-              <span style={{ color: 'var(--sub)' }}>{i.name} × {i.qty}</span>
-              <span>{money(i.price * i.qty)}</span>
+            <div className="co-line" key={i.id}>
+              <div className="co-line-img">
+                {Array.isArray(i.images) && i.images[0]
+                  ? <img src={i.images[0]} alt="" />
+                  : <span>🕯️</span>}
+                <span className="co-line-qty">{i.qty}</span>
+              </div>
+              <span className="co-line-name">{i.name}</span>
+              <span className="co-line-price">{money(i.price * i.qty)}</span>
             </div>
           ))}
-          <div style={{ display: 'flex', gap: 8, margin: '16px 0' }}>
-            <input value={promo} onChange={e => setPromo(e.target.value)} placeholder="Promo code"
-                   style={{ flex: 1, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px', color: 'var(--cream)' }} />
-            <button className="btn btn-ghost" onClick={applyPromo}>Apply</button>
+          <div style={{ display: 'flex', gap: 8, margin: '18px 0' }}>
+            <input value={promo} onChange={e => setPromo(e.target.value)} placeholder="Promo code" className="co-promo" />
+            <button className="btn btn-ghost" onClick={applyPromo} style={{ padding: '0 18px' }}>Apply</button>
           </div>
-          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
             <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Subtotal</span><span>{money(subtotal)}</span></div>
             {discount > 0 && <div className="foot-row"><span style={{ color: 'var(--green)' }}>Discount ({applied.code})</span><span style={{ color: 'var(--green)' }}>−{money(discount)}</span></div>}
-            <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Shipping</span><span>{shipping === 0 ? 'Free' : money(shipping)}</span></div>
+            <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Shipping{form.city ? ` · ${form.city}` : ''}</span><span>{shipping === 0 ? 'Free' : money(shipping)}</span></div>
             <div className="foot-row total"><span>Total</span><span>{money(total)}</span></div>
           </div>
           {belowMin && (
-            <div style={{ background: 'var(--paper)', border: '1px solid var(--gold)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--gold-deep)', marginTop: 10 }}>
+            <div style={{ background: 'var(--paper)', border: '1px solid var(--gold)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--gold-deep)', marginTop: 12 }}>
               Minimum order is {money(minOrder)}. Add {money(minOrder - subtotal)} more to check out.
             </div>
           )}
-          <button className="btn btn-gold" style={{ width: '100%', marginTop: 10 }} disabled={placing || belowMin} onClick={placeOrder}>
+          <button className="btn btn-gold" style={{ width: '100%', marginTop: 14 }} disabled={placing || belowMin} onClick={placeOrder}>
             {placing ? 'Processing…' : `Place Order · ${money(total)}`}
           </button>
-          <p style={{ color: 'var(--sub)', fontSize: 12, textAlign: 'center', marginTop: 12 }}>
-            Secure checkout · Your details are protected
+          <p style={{ color: 'var(--sub)', fontSize: 12, textAlign: 'center', marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            🔒 Secure checkout · Your details are protected
           </p>
         </div>
       </div>

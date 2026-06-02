@@ -16,6 +16,7 @@ import Approvals from './modules/Approvals'
 import Reports from './modules/Reports'
 import Shipments from './modules/Shipments'
 import Settings from './modules/Settings'
+import NotificationBell from './components/NotificationBell'
 import { useSettings } from '../lib/useSettings'
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Jost:wght@300;400;500&display=swap');`
@@ -134,6 +135,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <NotificationBell data={data} goto={goto} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{session?.user?.email || 'Demo Admin'}</div>
               <div style={{ fontSize: 11, color: AC.sub }}>Administrator</div>

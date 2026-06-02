@@ -24,6 +24,8 @@ export default function Overview({ data, goto }) {
         <SectionTitle eyebrow="Dashboard" title="Overview" />
       </div>
 
+      <AlertsPanel data={data} goto={goto} />
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 24 }}>
         <KpiCard label="Revenue (30d)" value={fmtEGP(cmp.cur)} delta={cmp.delta} sub="vs prev 30d" accent={AC.gold} />
         <KpiCard label="Total Orders" value={k.orderCount} accent={AC.ink} />
@@ -96,6 +98,43 @@ function ActionRow({ icon: Icon, label, tone, onClick }) {
       <div style={{ width: 34, height: 34, borderRadius: 8, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={17} color={c} /></div>
       <span style={{ fontSize: 13.5, color: AC.ink, flex: 1 }}>{label}</span>
       <ArrowUpRight size={15} color={AC.sub} />
+    </div>
+  )
+}
+
+import { buildNotifications, NOTE_META } from '../lib/notifications'
+import { Package as PkgIcon, CreditCard as CardIcon, Boxes as BoxIcon, Truck as TruckIcon, Bell as BellIcon } from 'lucide-react'
+
+const ALERT_ICONS = { order: PkgIcon, review: CardIcon, stock: BoxIcon, shipment: TruckIcon }
+
+function AlertsPanel({ data, goto }) {
+  const notes = buildNotifications(data).slice(0, 6)
+  if (!notes.length) return null
+  return (
+    <div style={{ background: '#fff', border: `1px solid ${AC.line}`, borderLeft: `3px solid ${AC.gold}`, borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <BellIcon size={16} color={AC.goldDeep} />
+        <strong style={{ fontFamily: serif, fontSize: 16 }}>Needs your attention</strong>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: AC.sub }}>{notes.length} item{notes.length > 1 ? 's' : ''}</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 10 }}>
+        {notes.map(n => {
+          const Icon = ALERT_ICONS[n.type] || BellIcon
+          const meta = NOTE_META[n.type] || {}
+          return (
+            <button key={n.id} onClick={() => goto?.(n.goto)}
+              style={{ display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left', padding: '10px 12px', border: `1px solid ${AC.line}`, borderRadius: 9, background: 'transparent', cursor: 'pointer' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: (meta.color || AC.gold) + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={15} color={meta.color || AC.gold} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: AC.ink }}>{n.title}{n.urgent && <span style={{ color: '#d2452f', marginLeft: 5, fontSize: 10 }}>●</span>}</div>
+                <div style={{ fontSize: 12, color: AC.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.detail}</div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
