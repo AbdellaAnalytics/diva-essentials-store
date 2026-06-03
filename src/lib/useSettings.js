@@ -31,6 +31,39 @@ export const DEFAULT_SETTINGS = {
   },
   about_html: '',
   returns_html: '',
+
+  // Social links (footer). Empty = hidden.
+  social: { instagram: '', facebook: '', tiktok: '', whatsapp: '' },
+
+  // Homepage sections (each can be toggled + edited from the dashboard)
+  promo: {
+    enabled: true,
+    image_url: '',
+    eyebrow: 'Limited Edition',
+    title: 'The Autumn Collection',
+    subtitle: 'Warm, woody scents for the season',
+    button_label: 'Shop Now',
+    button_href: '/shop',
+  },
+  features: {
+    enabled: true,
+    items: [
+      { icon: 'truck', title: 'Free Shipping', text: 'On orders over 2000 EGP' },
+      { icon: 'leaf', title: '100% Natural Soy Wax', text: 'Clean, long-lasting burn' },
+      { icon: 'shield', title: 'Secure Checkout', text: 'Your details are protected' },
+      { icon: 'heart', title: 'Hand-Poured', text: 'Made in small batches' },
+    ],
+  },
+  brand_story: {
+    enabled: true,
+    image_url: '',
+    eyebrow: 'Our Story',
+    title: 'Crafted with intention',
+    text: 'Every Diva Essentials candle is hand-poured in small batches using clean soy wax and carefully composed fragrances — designed to turn any room into a sanctuary.',
+    button_label: 'Learn More',
+    button_href: '/about',
+  },
+  collections_section: { enabled: true, title: 'Shop by Collection' },
 }
 
 export function useSettings() {

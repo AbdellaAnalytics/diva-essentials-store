@@ -18,7 +18,7 @@ export function useCategories(products = []) {
     ;(async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('name, slug')
+        .select('name, slug, image_url')
         .order('sort_order')
       if (active && !error && data?.length) {
         setCategories(data)

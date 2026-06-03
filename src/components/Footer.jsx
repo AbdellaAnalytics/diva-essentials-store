@@ -1,10 +1,30 @@
 import { Link } from 'react-router-dom'
+import { Instagram, Facebook, MessageCircle } from 'lucide-react'
 import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
+import { useSettings } from '../lib/useSettings'
+
+// TikTok isn't in lucide; use a small inline SVG.
+function TikTokIcon({ size = 17 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.4c-1.2.1-2.4-.2-3.5-.8v5.9c0 3.2-2.3 5.6-5.4 5.6-2.9 0-5.1-2.2-5.1-5 0-2.9 2.3-5.1 5.4-4.9v2.5c-.4-.1-.9-.2-1.3-.1-1.2.1-2.1 1.1-2 2.4 0 1.3 1 2.3 2.3 2.3 1.4 0 2.4-1 2.4-2.7V3h3.2z"/>
+    </svg>
+  )
+}
 
 export default function Footer() {
   const { products } = useProducts()
   const categories = useCategories(products)
+  const { settings } = useSettings()
+  const social = settings.social || {}
+
+  const links = [
+    { key: 'instagram', url: social.instagram, Icon: Instagram, label: 'Instagram' },
+    { key: 'facebook', url: social.facebook, Icon: Facebook, label: 'Facebook' },
+    { key: 'tiktok', url: social.tiktok, Icon: TikTokIcon, label: 'TikTok' },
+    { key: 'whatsapp', url: social.whatsapp ? `https://wa.me/${social.whatsapp.replace(/[^0-9]/g, '')}` : '', Icon: MessageCircle, label: 'WhatsApp' },
+  ].filter(l => l.url)
 
   return (
     <footer className="site">
@@ -16,6 +36,15 @@ export default function Footer() {
               Hand-poured luxury scented candles, crafted in Egypt. Quality, warmth,
               and atmosphere delivered to your door.
             </p>
+            {links.length > 0 && (
+              <div className="social-row">
+                {links.map(({ key, url, Icon, label }) => (
+                  <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={label}>
+                    <Icon size={17} />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <h4 style={{ fontSize: 16 }}>Shop</h4>
@@ -29,7 +58,6 @@ export default function Footer() {
           <div>
             <h4 style={{ fontSize: 16 }}>Help</h4>
             <ul>
-              <li><a href="https://wa.me/201147397783">WhatsApp Support</a></li>
               <li><Link to="/account">My Account</Link></li>
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/returns">Returns &amp; Replacement</Link></li>

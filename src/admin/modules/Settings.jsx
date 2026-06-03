@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck } from 'lucide-react'
+import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck, LayoutGrid, Share2 } from 'lucide-react'
 import { AC, serif, sans, Panel, Btn, SectionTitle } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { saveSettings, DEFAULT_SETTINGS } from '../../lib/useSettings'
@@ -41,6 +41,8 @@ export default function Settings({ data, reload }) {
     { id: 'integrations', label: 'Integrations', icon: Plug },
     { id: 'shipping', label: 'Shipping', icon: Truck },
     { id: 'hero', label: 'Hero Section', icon: Megaphone },
+    { id: 'homepage', label: 'Homepage', icon: LayoutGrid },
+    { id: 'social', label: 'Social', icon: Share2 },
     { id: 'pages', label: 'Pages', icon: FileText },
   ]
   return (
@@ -58,6 +60,8 @@ export default function Settings({ data, reload }) {
       {tab === 'integrations' && <Integrations />}
       {tab === 'shipping' && <ShippingEditor settings={data} />}
       {tab === 'hero' && <HeroEditor settings={data} />}
+      {tab === 'homepage' && <HomepageEditor settings={data} />}
+      {tab === 'social' && <SocialEditor settings={data} />}
       {tab === 'pages' && <PagesEditor settings={data} />}
     </div>
   )
@@ -302,6 +306,157 @@ function ShippingEditor({ settings }) {
   )
 }
 
+// ---------------- Homepage sections editor ----------------
+function HomepageEditor({ settings }) {
+  const [promo, setPromo] = useState(() => ({ ...(settings?.promo || {}) }))
+  const [features, setFeatures] = useState(() => ({ ...(settings?.features || {}) }))
+  const [story, setStory] = useState(() => ({ ...(settings?.brand_story || {}) }))
+  const [collections, setCollections] = useState(() => ({ ...(settings?.collections_section || {}) }))
+  const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState('')
+
+  const uploadFor = async (file, setter, key) => {
+    if (!file) return
+    setUploading(key)
+    try {
+      if (hasSupabase) {
+        const path = `home/${key}-${Date.now()}-${file.name.replace(/[^a-z0-9.]+/gi, '-')}`
+        const { error } = await supabase.storage.from('site-media').upload(path, file, { upsert: true })
+        if (error) throw error
+        const { data } = supabase.storage.from('site-media').getPublicUrl(path)
+        setter(s => ({ ...s, image_url: data.publicUrl }))
+      } else {
+        setter(s => ({ ...s, image_url: URL.createObjectURL(file) }))
+      }
+    } catch (e) { alert('Upload failed: ' + e.message) }
+    setUploading('')
+  }
+
+  const save = async () => {
+    await saveSettings({ promo, features, brand_story: story, collections_section: collections })
+    setSaved(true); setTimeout(() => setSaved(false), 1800)
+  }
+
+  const setFeature = (i, k, v) => setFeatures(s => ({ ...s, items: s.items.map((f, idx) => idx === i ? { ...f, [k]: v } : f) }))
+  const addFeature = () => setFeatures(s => ({ ...s, items: [...(s.items || []), { icon: 'sparkles', title: '', text: '' }] }))
+  const delFeature = (i) => setFeatures(s => ({ ...s, items: s.items.filter((_, idx) => idx !== i) }))
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <p style={{ color: AC.sub, fontSize: 13.5, margin: 0 }}>Control every homepage section — toggle on/off, upload images, edit text. Changes show on your store after saving.</p>
+
+      {/* Promo banner */}
+      <Panel title="Promo Banner" action={<Toggle on={promo.enabled !== false} onChange={v => setPromo(s => ({ ...s, enabled: v }))} />}>
+        <MediaRow url={promo.image_url} uploading={uploading === 'promo'} onUpload={f => uploadFor(f, setPromo, 'promo')} hint="Wide image, ~1920×600px" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+          <Field label="Eyebrow"><input style={inp} value={promo.eyebrow || ''} onChange={e => setPromo(s => ({ ...s, eyebrow: e.target.value }))} /></Field>
+          <Field label="Title"><input style={inp} value={promo.title || ''} onChange={e => setPromo(s => ({ ...s, title: e.target.value }))} /></Field>
+          <Field label="Subtitle"><input style={inp} value={promo.subtitle || ''} onChange={e => setPromo(s => ({ ...s, subtitle: e.target.value }))} /></Field>
+          <Field label="Button Label"><input style={inp} value={promo.button_label || ''} onChange={e => setPromo(s => ({ ...s, button_label: e.target.value }))} /></Field>
+          <Field label="Button Link"><input style={inp} value={promo.button_href || ''} onChange={e => setPromo(s => ({ ...s, button_href: e.target.value }))} placeholder="/shop" /></Field>
+        </div>
+      </Panel>
+
+      {/* Features */}
+      <Panel title="Features Bar" action={<Toggle on={features.enabled !== false} onChange={v => setFeatures(s => ({ ...s, enabled: v }))} />}>
+        <p style={{ ...hint, marginBottom: 12 }}>Icons: truck, leaf, shield, heart, award, clock, returns, sparkles</p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {(features.items || []).map((f, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 1.4fr 40px', gap: 8, alignItems: 'center' }}>
+              <input style={inp} value={f.icon} onChange={e => setFeature(i, 'icon', e.target.value)} placeholder="icon" />
+              <input style={inp} value={f.title} onChange={e => setFeature(i, 'title', e.target.value)} placeholder="Title" />
+              <input style={inp} value={f.text} onChange={e => setFeature(i, 'text', e.target.value)} placeholder="Text" />
+              <button onClick={() => delFeature(i)} style={iconBtn}><Trash2 size={16} color={AC.red} /></button>
+            </div>
+          ))}
+        </div>
+        <Btn variant="ghost" onClick={addFeature} style={{ marginTop: 10 }}><Plus size={14} /> Add Feature</Btn>
+      </Panel>
+
+      {/* Collections */}
+      <Panel title="Collections Section" action={<Toggle on={collections.enabled !== false} onChange={v => setCollections(s => ({ ...s, enabled: v }))} />}>
+        <Field label="Section Title"><input style={inp} value={collections.title || ''} onChange={e => setCollections(s => ({ ...s, title: e.target.value }))} /></Field>
+        <p style={hint}>Tip: upload a photo per collection in the <strong>Products → Collections</strong> area to make these cards shine. Without photos they show an elegant gradient.</p>
+      </Panel>
+
+      {/* Brand story */}
+      <Panel title="Brand Story" action={<Toggle on={story.enabled !== false} onChange={v => setStory(s => ({ ...s, enabled: v }))} />}>
+        <MediaRow url={story.image_url} uploading={uploading === 'story'} onUpload={f => uploadFor(f, setStory, 'story')} hint="Portrait image, ~1000×1250px" />
+        <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+          <Field label="Eyebrow"><input style={inp} value={story.eyebrow || ''} onChange={e => setStory(s => ({ ...s, eyebrow: e.target.value }))} /></Field>
+          <Field label="Title"><input style={inp} value={story.title || ''} onChange={e => setStory(s => ({ ...s, title: e.target.value }))} /></Field>
+          <Field label="Text"><textarea rows={3} style={inp} value={story.text || ''} onChange={e => setStory(s => ({ ...s, text: e.target.value }))} /></Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Field label="Button Label"><input style={inp} value={story.button_label || ''} onChange={e => setStory(s => ({ ...s, button_label: e.target.value }))} /></Field>
+            <Field label="Button Link"><input style={inp} value={story.button_href || ''} onChange={e => setStory(s => ({ ...s, button_href: e.target.value }))} placeholder="/about" /></Field>
+          </div>
+        </div>
+      </Panel>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Btn variant="solid" onClick={save}>{saved ? <><Check size={15} /> Saved</> : <><Save size={15} /> Save Homepage</>}</Btn>
+      </div>
+    </div>
+  )
+}
+
+// ---------------- Social editor ----------------
+function SocialEditor({ settings }) {
+  const [social, setSocial] = useState(() => ({ ...(settings?.social || {}) }))
+  const [saved, setSaved] = useState(false)
+  const set = (k, v) => setSocial(s => ({ ...s, [k]: v }))
+  const save = async () => { await saveSettings({ social }); setSaved(true); setTimeout(() => setSaved(false), 1800) }
+
+  const fields = [
+    { key: 'instagram', label: 'Instagram URL', ph: 'https://instagram.com/yourstore' },
+    { key: 'facebook', label: 'Facebook URL', ph: 'https://facebook.com/yourstore' },
+    { key: 'tiktok', label: 'TikTok URL', ph: 'https://tiktok.com/@yourstore' },
+    { key: 'whatsapp', label: 'WhatsApp Number', ph: '+201XXXXXXXXX' },
+  ]
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <Panel title="Social Media Links">
+        <p style={{ ...hint, marginBottom: 14 }}>Add your links — only the ones you fill in will appear in the footer. Leave blank to hide an icon.</p>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {fields.map(f => (
+            <Field key={f.key} label={f.label}>
+              <input style={inp} value={social[f.key] || ''} onChange={e => set(f.key, e.target.value)} placeholder={f.ph} />
+            </Field>
+          ))}
+        </div>
+      </Panel>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Btn variant="solid" onClick={save}>{saved ? <><Check size={15} /> Saved</> : <><Save size={15} /> Save Social</>}</Btn>
+      </div>
+    </div>
+  )
+}
+
+// small helpers
+function Toggle({ on, onChange }) {
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', color: AC.sub }}>
+      <input type="checkbox" checked={on} onChange={e => onChange(e.target.checked)} style={{ accentColor: AC.gold, width: 16, height: 16 }} /> Show
+    </label>
+  )
+}
+function MediaRow({ url, onUpload, uploading, hint: h }) {
+  return (
+    <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+      <div style={{ width: 120, height: 72, borderRadius: 9, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {url ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={20} color={AC.sub} />}
+      </div>
+      <div>
+        <label style={{ ...btnGhost, cursor: 'pointer' }}>
+          <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload image'}
+          <input type="file" accept="image/*" onChange={e => onUpload(e.target.files?.[0])} style={{ display: 'none' }} />
+        </label>
+        {h && <p style={hint}>{h}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ---------------- Pages editor ----------------
 function PagesEditor({ settings }) {
   const [about, setAbout] = useState(settings?.about_html || '')
@@ -332,3 +487,4 @@ const lbl = { display: 'block', fontSize: 11, letterSpacing: '.08em', textTransf
 const hint = { fontSize: 12, color: AC.sub, marginTop: 6, marginBottom: 0, lineHeight: 1.5 }
 const btnGhost = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 14px', border: `1px solid ${AC.line}`, borderRadius: 9, background: 'transparent', fontSize: 13, fontFamily: sans, cursor: 'pointer', color: AC.ink }
 const iconBtn = { background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, display: 'inline-flex' }
+function Field({ label, children }) { return <div><label style={lbl}>{label}</label>{children}</div> }

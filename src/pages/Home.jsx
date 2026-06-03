@@ -1,12 +1,21 @@
 import { Link } from 'react-router-dom'
+import { Truck, Leaf, Shield, Heart, Sparkles, Award, Clock, RotateCcw } from 'lucide-react'
 import { ProductCard } from '../components/Shop'
 import { useProducts } from '../lib/useProducts'
+import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
+
+const FEATURE_ICONS = { truck: Truck, leaf: Leaf, shield: Shield, heart: Heart, award: Award, clock: Clock, returns: RotateCcw, sparkles: Sparkles }
 
 export default function Home() {
   const { products } = useProducts()
   const { settings } = useSettings()
+  const categories = useCategories(products)
   const hero = settings.hero || {}
+  const features = settings.features || {}
+  const promo = settings.promo || {}
+  const story = settings.brand_story || {}
+  const collections = settings.collections_section || {}
   // Show ALL products on the homepage. Featured ones come first (if any flagged),
   // then the rest — so the section always reflects the full catalog.
   const featured = products.filter(p => p.is_featured)
@@ -58,24 +67,83 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section" style={{ background: 'var(--paper)' }}>
-        <div className="container">
-          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))' }}>
-            {[
-              ['🚚', 'Free Shipping', 'On all orders over 2000 EGP'],
-              ['🕯️', 'Clean Burn', 'Premium wax, up to 45 hours'],
-              ['↩️', '14-Day Returns', 'Easy exchange & return policy'],
-              ['💬', 'WhatsApp Support', 'We are here whenever you need'],
-            ].map(([icon, title, sub]) => (
-              <div key={title} style={{ textAlign: 'center', padding: 20 }}>
-                <div style={{ fontSize: 34, marginBottom: 10 }}>{icon}</div>
-                <strong className="serif" style={{ fontSize: 20, display: 'block', marginBottom: 6 }}>{title}</strong>
-                <p style={{ color: 'var(--sub)', fontSize: 14 }}>{sub}</p>
-              </div>
-            ))}
+      {/* Features bar */}
+      {features.enabled !== false && (
+        <section className="section feature-bar" style={{ background: 'var(--paper)', paddingTop: 50, paddingBottom: 50 }}>
+          <div className="container">
+            <div className="feature-grid">
+              {(features.items || []).map((f, i) => {
+                const Icon = FEATURE_ICONS[f.icon] || Sparkles
+                return (
+                  <div key={i} className="feature-item">
+                    <Icon size={30} strokeWidth={1.4} color="var(--gold-deep)" />
+                    <strong className="serif">{f.title}</strong>
+                    <p>{f.text}</p>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Collections (category images) */}
+      {collections.enabled !== false && categories.length > 0 && (
+        <section className="section">
+          <div className="container">
+            <div className="section-head">
+              <h2>{collections.title || 'Shop by Collection'}</h2>
+            </div>
+            <div className="collection-grid">
+              {categories.map(c => (
+                <Link key={c.slug} to={`/shop?category=${c.slug}`} className="collection-card">
+                  {c.image_url
+                    ? <img src={c.image_url} alt={c.name} />
+                    : <div className="collection-fallback" />}
+                  <div className="collection-overlay">
+                    <span className="collection-name serif">{c.name}</span>
+                    <span className="collection-cta">Shop Now →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Promo banner */}
+      {promo.enabled !== false && (
+        <section className="promo-banner" style={promo.image_url ? { backgroundImage: `url(${promo.image_url})` } : {}}>
+          <div className="promo-overlay" />
+          <div className="container promo-content">
+            {promo.eyebrow && <div className="eyebrow">{promo.eyebrow}</div>}
+            <h2 className="serif">{promo.title}</h2>
+            {promo.subtitle && <p>{promo.subtitle}</p>}
+            {promo.button_label && (
+              <Link to={promo.button_href || '/shop'} className="btn btn-gold">{promo.button_label}</Link>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Brand story */}
+      {story.enabled !== false && (
+        <section className="section brand-story">
+          <div className="container story-grid">
+            <div className="story-media">
+              {story.image_url ? <img src={story.image_url} alt="" /> : <div className="story-fallback" />}
+            </div>
+            <div className="story-text">
+              {story.eyebrow && <div className="eyebrow">{story.eyebrow}</div>}
+              <h2 className="serif">{story.title}</h2>
+              <p>{story.text}</p>
+              {story.button_label && (
+                <Link to={story.button_href || '/about'} className="btn btn-ghost">{story.button_label}</Link>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   )
 }
