@@ -380,3 +380,13 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
 .social-row { display: flex; gap: 14px; margin-top: 16px; }
 .social-row a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--sub); transition: all .2s; }
 .social-row a:hover { background: var(--gold-deep); color: #fff; border-color: var(--gold-deep); }
+
+/* ---------- RTL (Arabic) adjustments ---------- */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] .nav-links { flex-direction: row-reverse; }
+[dir="rtl"] .cart-badge { right: auto; left: -9px; }
+[dir="rtl"] .reward-fill { left: auto; right: 0; }
+[dir="rtl"] .badge { left: auto; right: 14px; }
+[dir="rtl"] .hero-content, [dir="rtl"] .section-head, [dir="rtl"] .promo-content { text-align: center; }
+[dir="rtl"] .co-num { font-family: sans-serif; }
+[dir="rtl"] body { font-family: 'Jost', 'Tajawal', system-ui, sans-serif; }

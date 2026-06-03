@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { CartProvider } from './context/CartContext'
 import { UIProvider } from './context/UIContext'
+import { LangProvider } from './context/LangContext'
 import { CartDrawer } from './components/Shop'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -22,12 +23,14 @@ const AdminDashboard = lazy(() => import('./admin/AdminDashboard'))
 function Storefront({ children }) {
   return (
     <UIProvider>
+      <LangProvider>
       <CartProvider>
         <Header />
         <CartDrawer />
         <main style={{ minHeight: '60vh' }}>{children}</main>
         <Footer />
       </CartProvider>
+      </LangProvider>
     </UIProvider>
   )
 }

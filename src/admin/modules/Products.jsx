@@ -268,6 +268,7 @@ function ProductEditor({ product, cats, onSave, onClose, busy }) {
 function CollectionsManager({ cats, setCats, onClose, reload }) {
   const [local, setLocal] = useState(cats)
   const [newName, setNewName] = useState('')
+  const [uploading, setUploading] = useState('')
 
   const add = async () => {
     if (!newName.trim()) return
@@ -291,14 +292,42 @@ function CollectionsManager({ cats, setCats, onClose, reload }) {
     const next = local.filter(x => x.slug !== c.slug)
     setLocal(next); setCats(next)
   }
+  const uploadImage = async (c, file) => {
+    if (!file) return
+    setUploading(c.slug)
+    try {
+      let url
+      if (hasSupabase) {
+        const path = `collections/${c.slug}-${Date.now()}-${file.name.replace(/[^a-z0-9.]+/gi, '-')}`
+        const { error } = await supabase.storage.from('site-media').upload(path, file, { upsert: true })
+        if (error) throw error
+        url = supabase.storage.from('site-media').getPublicUrl(path).data.publicUrl
+        await supabase.from('categories').update({ image_url: url }).eq('id', c.id)
+      } else {
+        url = URL.createObjectURL(file)
+      }
+      const next = local.map(x => x.slug === c.slug ? { ...x, image_url: url } : x)
+      setLocal(next); setCats(next)
+    } catch (e) { alert('Upload failed: ' + e.message) }
+    setUploading('')
+  }
 
   return (
     <Modal title="Manage Collections" onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+      <p style={{ fontSize: 12.5, color: AC.sub, marginBottom: 14, lineHeight: 1.5 }}>
+        Upload a photo per collection to power the homepage "Shop by Collection" cards. Recommended: portrait 3:4, ~900×1200px.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
         {local.map(c => (
-          <div key={c.slug} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input style={{ ...inp, marginBottom: 0 }} value={c.name} onChange={e => rename(c, e.target.value)} onBlur={() => commitRename(c)} />
-            <span style={{ fontSize: 12, color: AC.sub, width: 110 }}>{c.slug}</span>
+          <div key={c.slug} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ width: 46, height: 56, borderRadius: 8, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {c.image_url ? <img src={c.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 18, opacity: .4 }}>🏷️</span>}
+            </div>
+            <input style={{ ...inp, marginBottom: 0, flex: 1 }} value={c.name} onChange={e => rename(c, e.target.value)} onBlur={() => commitRename(c)} />
+            <label style={{ ...btnGhost, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <Upload size={13} /> {uploading === c.slug ? '…' : 'Image'}
+              <input type="file" accept="image/*" onChange={e => uploadImage(c, e.target.files?.[0])} style={{ display: 'none' }} />
+            </label>
             <button onClick={() => remove(c)} style={iconBtn}><Trash2 size={16} color={AC.red} /></button>
           </div>
         ))}

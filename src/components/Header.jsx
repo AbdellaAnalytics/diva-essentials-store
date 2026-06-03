@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ShoppingBag, User, Sun, Moon } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useLang } from '../context/LangContext'
 import { useUI } from '../context/UIContext'
 import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
@@ -8,6 +9,7 @@ import { useCategories } from '../lib/useCategories'
 export default function Header() {
   const { count, setOpen } = useCart()
   const { theme, toggleTheme, currency, toggleCurrency } = useUI()
+  const { lang, toggleLang, t } = useLang()
   const { products } = useProducts()
   const categories = useCategories(products)
 
@@ -22,12 +24,15 @@ export default function Header() {
             Diva<small>Essentials</small>
           </Link>
           <nav className="nav-links">
-            <Link to="/shop">Shop All</Link>
+            <Link to="/shop">{t('shop_all')}</Link>
             {categories.map(c => (
               <Link key={c.slug} to={`/shop?category=${c.slug}`}>{c.name}</Link>
             ))}
           </nav>
           <div className="nav-actions">
+            <button className="toggle-pill" onClick={toggleLang} aria-label="Switch language" title="Switch language">
+              {lang === 'ar' ? 'EN' : 'ع'}
+            </button>
             <button className="toggle-pill" onClick={toggleCurrency} aria-label="Switch currency" title="Switch currency">
               {currency}
             </button>
