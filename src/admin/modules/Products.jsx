@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Plus, Pencil, Trash2, X, Upload, Link2, Star, Eye, EyeOff, FolderPlus, Save } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Upload, Link2, Star, Eye, EyeOff, FolderPlus, Save, ChevronUp, ChevronDown } from 'lucide-react'
 import { AC, serif, sans, Panel, KpiCard, Btn, Badge, Table, SectionTitle } from '../ui'
 import { fmtEGP } from '../lib/analytics'
 import { supabase } from '../../lib/supabase'
@@ -311,17 +311,44 @@ function CollectionsManager({ cats, setCats, onClose, reload }) {
     } catch (e) { alert('Upload failed: ' + e.message) }
     setUploading('')
   }
+  const removeImage = async (c) => {
+    if (hasSupabase) await supabase.from('categories').update({ image_url: null }).eq('id', c.id)
+    const next = local.map(x => x.slug === c.slug ? { ...x, image_url: null } : x)
+    setLocal(next); setCats(next)
+  }
+  const move = async (i, dir) => {
+    const j = i + dir
+    if (j < 0 || j >= local.length) return
+    const next = [...local]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    // persist sort_order
+    next.forEach((c, idx) => { c.sort_order = idx + 1 })
+    setLocal(next); setCats(next)
+    if (hasSupabase) {
+      await Promise.all(next.map(c => supabase.from('categories').update({ sort_order: c.sort_order }).eq('id', c.id)))
+    }
+  }
 
   return (
     <Modal title="Manage Collections" onClose={onClose}>
-      <p style={{ fontSize: 12.5, color: AC.sub, marginBottom: 14, lineHeight: 1.5 }}>
-        Upload a photo per collection to power the homepage "Shop by Collection" cards. Recommended: portrait 3:4, ~900×1200px.
-      </p>
+      <div style={{ background: AC.bg, border: `1px solid ${AC.line}`, borderRadius: 9, padding: '11px 13px', marginBottom: 16, fontSize: 12.5, color: AC.sub, lineHeight: 1.6 }}>
+        <strong style={{ color: AC.ink }}>📐 Collection image guide</strong><br />
+        Best ratio: <strong style={{ color: AC.goldDeep }}>Portrait 3:4</strong> (e.g. 900×1200px). JPG/PNG, under ~1MB.
+        These photos appear on the homepage "Shop by Collection" cards. Use the arrows to reorder how they appear.
+        <div style={{ marginTop: 4 }} dir="rtl">نسبة الصورة المفضلة: <strong style={{ color: AC.goldDeep }}>طولية ٣:٤</strong> (مثلاً ٩٠٠×١٢٠٠). الصور تظهر في قسم "تسوّق حسب المجموعة" بالصفحة الرئيسية. استخدم الأسهم لترتيبها.</div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
-        {local.map(c => (
+        {local.map((c, i) => (
           <div key={c.slug} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ width: 46, height: 56, borderRadius: 8, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {/* reorder arrows */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <button onClick={() => move(i, -1)} disabled={i === 0} style={{ ...iconBtn, padding: 2, opacity: i === 0 ? .3 : 1 }} title="Move up"><ChevronUp size={15} color={AC.ink} /></button>
+              <button onClick={() => move(i, 1)} disabled={i === local.length - 1} style={{ ...iconBtn, padding: 2, opacity: i === local.length - 1 ? .3 : 1 }} title="Move down"><ChevronDown size={15} color={AC.ink} /></button>
+            </div>
+            {/* image preview */}
+            <div style={{ position: 'relative', width: 46, height: 58, borderRadius: 8, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {c.image_url ? <img src={c.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 18, opacity: .4 }}>🏷️</span>}
+              {c.image_url && <button onClick={() => removeImage(c)} title="Remove image" style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,.6)', border: 'none', borderRadius: 4, cursor: 'pointer', padding: 1, display: 'flex' }}><X size={11} color="#fff" /></button>}
             </div>
             <input style={{ ...inp, marginBottom: 0, flex: 1 }} value={c.name} onChange={e => rename(c, e.target.value)} onBlur={() => commitRename(c)} />
             <label style={{ ...btnGhost, cursor: 'pointer', whiteSpace: 'nowrap' }}>

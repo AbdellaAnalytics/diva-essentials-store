@@ -347,7 +347,7 @@ function HomepageEditor({ settings }) {
 
       {/* Promo banner */}
       <Panel title="Promo Banner" action={<Toggle on={promo.enabled !== false} onChange={v => setPromo(s => ({ ...s, enabled: v }))} />}>
-        <MediaRow url={promo.image_url} uploading={uploading === 'promo'} onUpload={f => uploadFor(f, setPromo, 'promo')} hint="Wide image, ~1920×600px" />
+        <MediaRow url={promo.image_url} uploading={uploading === 'promo'} onUpload={f => uploadFor(f, setPromo, 'promo')} onRemove={() => setPromo(s => ({ ...s, image_url: '' }))} hint="Wide banner 16:5, ~1920×600px. JPG/PNG under ~1MB. · بانر عريض ١٩٢٠×٦٠٠" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
           <Field label="Eyebrow"><input style={inp} value={promo.eyebrow || ''} onChange={e => setPromo(s => ({ ...s, eyebrow: e.target.value }))} /></Field>
           <Field label="Title"><input style={inp} value={promo.title || ''} onChange={e => setPromo(s => ({ ...s, title: e.target.value }))} /></Field>
@@ -440,18 +440,19 @@ function Toggle({ on, onChange }) {
     </label>
   )
 }
-function MediaRow({ url, onUpload, uploading, hint: h }) {
+function MediaRow({ url, onUpload, onRemove, uploading, hint: h }) {
   return (
-    <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-      <div style={{ width: 120, height: 72, borderRadius: 9, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+      <div style={{ position: 'relative', width: 120, height: 72, borderRadius: 9, overflow: 'hidden', border: `1px solid ${AC.line}`, background: AC.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {url ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={20} color={AC.sub} />}
+        {url && onRemove && <button onClick={onRemove} title="Remove image" style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,.6)', border: 'none', borderRadius: 5, cursor: 'pointer', padding: 2, display: 'flex' }}><X size={12} color="#fff" /></button>}
       </div>
-      <div>
+      <div style={{ flex: 1 }}>
         <label style={{ ...btnGhost, cursor: 'pointer' }}>
           <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload image'}
           <input type="file" accept="image/*" onChange={e => onUpload(e.target.files?.[0])} style={{ display: 'none' }} />
         </label>
-        {h && <p style={hint}>{h}</p>}
+        {h && <div style={{ background: AC.bg, border: `1px solid ${AC.line}`, borderRadius: 8, padding: '8px 11px', marginTop: 8, fontSize: 12, color: AC.sub, lineHeight: 1.5 }}>📐 {h}</div>}
       </div>
     </div>
   )
