@@ -289,6 +289,16 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
 @media (max-width: 860px) {
   .checkout-grid { grid-template-columns: 1fr !important; gap: 22px !important; }
   .co-summary { position: static !important; }
+  /* On phones, get the form fields up near the top — no scrolling to reach them */
+  .checkout-wrap { padding: 16px 16px 70px !important; }
+  .checkout-head { margin-bottom: 18px !important; }
+  .checkout-head h2 { font-size: 26px !important; }
+  .checkout-head .eyebrow { font-size: 10px !important; margin-bottom: 4px; }
+  .co-card { padding: 18px 16px; margin-bottom: 14px; }
+  /* show the order summary AFTER the forms on mobile (forms first) */
+  .checkout-grid > .co-summary { order: 2; }
+  .checkout-grid > div:first-child { order: 1; }
+}
   .co-row { grid-template-columns: 1fr; }
 }
 
@@ -390,3 +400,14 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
 [dir="rtl"] .hero-content, [dir="rtl"] .section-head, [dir="rtl"] .promo-content { text-align: center; }
 [dir="rtl"] .co-num { font-family: sans-serif; }
 [dir="rtl"] body { font-family: 'Jost', 'Tajawal', system-ui, sans-serif; }
+
+/* ---------- mobile checkout input ergonomics ---------- */
+@media (max-width: 860px) {
+  /* 16px prevents iOS Safari auto-zoom on focus; scroll-margin keeps field visible above keyboard */
+  .co-card .field input, .co-card .field textarea, .co-promo {
+    font-size: 16px !important;
+    scroll-margin-top: 80px;
+  }
+  /* stack name/phone & city/notes vertically on small phones for easier tapping */
+  .co-row { grid-template-columns: 1fr; gap: 0; }
+}

@@ -124,7 +124,7 @@ export default function Checkout() {
 
   return (
     <div className="container checkout-wrap" style={{ padding: '46px 24px 80px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 38 }}>
+      <div className="checkout-head" style={{ textAlign: 'center', marginBottom: 38 }}>
         <div className="eyebrow" style={{ color: 'var(--gold-deep)', letterSpacing: '.3em', fontSize: 11, textTransform: 'uppercase' }}>Almost there</div>
         <h2 className="serif" style={{ fontSize: 'clamp(30px,5vw,44px)', fontWeight: 300, marginTop: 8 }}>Checkout</h2>
       </div>
