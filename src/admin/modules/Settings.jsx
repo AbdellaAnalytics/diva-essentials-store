@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck, LayoutGrid, Share2, Users } from 'lucide-react'
+import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck, LayoutGrid, Share2, Users, X } from 'lucide-react'
 import { AC, serif, sans, Panel, Btn, SectionTitle } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { saveSettings, DEFAULT_SETTINGS } from '../../lib/useSettings'
