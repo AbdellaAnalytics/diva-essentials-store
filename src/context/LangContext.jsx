@@ -35,6 +35,7 @@ const STRINGS = {
     paymob: 'Paymob', instapay: 'InstaPay / Bank', vodafone_cash: 'Vodafone Cash', card: 'Credit / Debit Card',
     // generic
     home: 'Home', loading: 'Loading…', search: 'Search',
+    no_results: 'No candles match', clear_search: 'Clear search',
   },
   ar: {
     shop_all: 'كل المنتجات', cart: 'السلة', account: 'حسابي', checkout: 'الدفع',
@@ -65,7 +66,8 @@ const STRINGS = {
     // payments
     paymob: 'باي موب', instapay: 'إنستاباي / تحويل بنكي', vodafone_cash: 'فودافون كاش', card: 'بطاقة ائتمان / خصم',
     // generic
-    home: 'الرئيسية', loading: 'جاري التحميل…', search: 'بحث',
+    home: 'الرئيسية', loading: 'جاري التحميل…', search: 'ابحث عن منتج',
+    no_results: 'مفيش منتجات مطابقة لـ', clear_search: 'مسح البحث',
   },
 }
 

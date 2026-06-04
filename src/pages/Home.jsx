@@ -5,6 +5,7 @@ import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
 import { useLang } from '../context/LangContext'
+import Seo from '../components/Seo'
 
 const FEATURE_ICONS = { truck: Truck, leaf: Leaf, shield: Shield, heart: Heart, award: Award, clock: Clock, returns: RotateCcw, sparkles: Sparkles }
 
@@ -26,6 +27,7 @@ export default function Home() {
 
   return (
     <>
+      <Seo title="Diva Essentials — Luxury Scented Candles" description="Hand-poured luxury soy candles crafted in Egypt. Lavender, vanilla & woody scents. Cash on delivery & fast shipping." path="/" />
       <section className="hero-media">
         {/* background media */}
         {hero.media_url ? (

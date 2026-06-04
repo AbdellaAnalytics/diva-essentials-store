@@ -424,3 +424,12 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
   /* stack name/phone & city/notes vertically on small phones for easier tapping */
   .co-row { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* ---------- shop search ---------- */
+.shop-search { display: flex; align-items: center; gap: 10px; max-width: 460px; margin: 0 auto 28px; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 12px 18px; transition: border-color .2s; }
+.shop-search:focus-within { border-color: var(--gold); }
+.shop-search input { flex: 1; border: none; outline: none; background: transparent; font-size: 15px; font-family: inherit; color: var(--ink); }
+.shop-search input::placeholder { color: var(--sub); }
+.shop-search-x { background: none; border: none; cursor: pointer; color: var(--sub); display: flex; padding: 2px; }
+.shop-search-x:hover { color: var(--ink); }
+[dir="rtl"] .shop-search { direction: rtl; }
