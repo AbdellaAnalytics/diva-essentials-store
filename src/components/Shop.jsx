@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom'
 import { X, Minus, Plus, Trash2, Truck, Tag, Gift } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useUI } from '../context/UIContext'
+import { useLang } from '../context/LangContext'
 import { useSettings } from '../lib/useSettings'
 import { useProducts } from '../lib/useProducts'
 
 export function ProductCard({ p }) {
   const { add } = useCart()
   const { money } = useUI()
+  const { t } = useLang()
   const off = p.compare_price
     ? Math.round((1 - p.price / p.compare_price) * 100)
     : 0
@@ -43,11 +45,11 @@ export function ProductCard({ p }) {
         </div>
         <button
           className="btn btn-gold"
-          style={{ width: '100%' }}
+          style={{ width: '100%', marginTop: 12 }}
           disabled={outOfStock}
           onClick={() => add(p, 1)}
         >
-          {outOfStock ? 'Sold Out' : 'Add to Cart'}
+          {outOfStock ? t('sold_out') : t('add_to_cart')}
         </button>
       </div>
     </div>
@@ -57,6 +59,7 @@ export function ProductCard({ p }) {
 export function CartDrawer() {
   const { items, open, setOpen, setQty, remove, add, subtotal, count } = useCart()
   const { money } = useUI()
+  const { t } = useLang()
   const { settings } = useSettings()
   const { products } = useProducts()
   if (!open) return null
@@ -84,16 +87,16 @@ export function CartDrawer() {
       <div className="drawer-overlay" onClick={() => setOpen(false)} />
       <aside className="drawer cart2">
         <div className="drawer-head">
-          <h3>Cart · {count}</h3>
+          <h3>{t('your_cart')} · {count}</h3>
           <button className="icon-btn" onClick={() => setOpen(false)}><X size={22} /></button>
         </div>
 
         {items.length === 0 ? (
-          <div className="drawer-body"><div className="empty">Your cart is empty.</div></div>
+          <div className="drawer-body"><div className="empty">{t('your_cart_empty')}</div></div>
         ) : (
           <>
             {/* urgency banner */}
-            <div className="cart-reserve">Your items are reserved just for you ✨</div>
+            <div className="cart-reserve">{t('reserved')} ✨</div>
 
             <div className="drawer-body">
               {/* reward progress bar */}
@@ -149,7 +152,7 @@ export function CartDrawer() {
               {/* cross-sell */}
               {alsoBought.length > 0 && (
                 <div className="cross">
-                  <div className="cross-head">People Also Bought</div>
+                  <div className="cross-head">{t('people_also_bought')}</div>
                   {alsoBought.map(p => (
                     <div className="cross-item" key={p.id}>
                       <div className="cross-img">
@@ -159,7 +162,7 @@ export function CartDrawer() {
                         <strong>{p.name}</strong>
                         <span className="cross-price">{money(p.price)}</span>
                       </div>
-                      <button className="cross-add" onClick={() => add(p, 1)}>Add</button>
+                      <button className="cross-add" onClick={() => add(p, 1)}>{t('add')}</button>
                     </div>
                   ))}
                 </div>
@@ -169,12 +172,12 @@ export function CartDrawer() {
             {/* sticky footer */}
             <div className="drawer-foot">
               <div className="cart2-promo">
-                <input placeholder="Discount code" id="cart-promo" />
-                <button onClick={() => setOpen(false)}>Apply</button>
+                <input placeholder={t('discount_code')} id="cart-promo" />
+                <button onClick={() => setOpen(false)}>{t('apply')}</button>
               </div>
-              <div className="foot-row total"><span>Subtotal</span><span>{money(subtotal)}</span></div>
+              <div className="foot-row total"><span>{t('subtotal')}</span><span>{money(subtotal)}</span></div>
               <Link to="/checkout" className="btn btn-gold cart2-checkout" onClick={() => setOpen(false)}>
-                Checkout · {money(subtotal)}
+                {t('checkout')} · {money(subtotal)}
               </Link>
             </div>
           </>

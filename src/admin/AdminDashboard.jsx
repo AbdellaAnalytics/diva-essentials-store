@@ -18,6 +18,7 @@ import Shipments from './modules/Shipments'
 import Settings from './modules/Settings'
 import NotificationBell from './components/NotificationBell'
 import { useSettings } from '../lib/useSettings'
+import { useAdminAccess, OWNER_ONLY } from './lib/permissions'
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Jost:wght@300;400;500&display=swap');`
 
@@ -45,6 +46,7 @@ export default function AdminDashboard() {
   const [authReady, setAuthReady] = useState(false)
   const data = useAdminData()
   const { settings } = useSettings()
+  const access = useAdminAccess(session)
 
   useEffect(() => {
     if (!hasSupabase) { setAuthReady(true); return }
@@ -55,6 +57,22 @@ export default function AdminDashboard() {
 
   // Auth gate (only when Supabase is configured; demo mode is open)
   if (hasSupabase && authReady && !session) return <Login />
+
+  // Access gate — logged in but not an owner/authorized manager
+  if (hasSupabase && session && !access.loading && !access.allowed) {
+    return <AccessDenied email={access.email} />
+  }
+
+  // Which nav items can this admin see?
+  const visibleNav = NAV.filter(n => {
+    if (access.isOwner) return true
+    if (OWNER_ONLY.includes(n.id)) return false      // settings + approvals = owner only
+    if (n.id === 'overview') return true             // everyone allowed sees overview
+    return access.perms.has(n.id)
+  })
+  // If current page isn't allowed, snap to first visible
+  const allowedIds = visibleNav.map(n => n.id)
+  const safePage = allowedIds.includes(page) ? page : (allowedIds[0] || 'overview')
 
   const goto = (id) => { setPage(id); setNavOpen(false) }
 
@@ -81,7 +99,7 @@ export default function AdminDashboard() {
     reports: <Reports data={data} />,
     shipments: <Shipments />,
     settings: <Settings data={settings} reload={data.reload} />,
-  }[page]
+  }[safePage]
 
   return (
     <div style={{ background: AC.bg, minHeight: '100vh', fontFamily: sans, color: AC.ink, display: 'flex' }}>
@@ -104,8 +122,8 @@ export default function AdminDashboard() {
         </div>
 
         <nav style={{ padding: '14px 12px', flex: 1 }}>
-          {NAV.map(n => {
-            const active = page === n.id
+          {visibleNav.map(n => {
+            const active = safePage === n.id
             return (
               <div key={n.id} className="adm-nav-item" onClick={() => goto(n.id)}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, cursor: 'pointer', marginBottom: 3, background: active ? 'rgba(200,160,74,.16)' : 'transparent', color: active ? AC.gold : '#c5bca9', fontSize: 14, fontWeight: active ? 500 : 400, transition: 'background .2s' }}>
@@ -150,6 +168,24 @@ export default function AdminDashboard() {
       </main>
 
       <style>{`@media(max-width:900px){ .adm-burger{display:block!important} }`}</style>
+    </div>
+  )
+}
+
+function AccessDenied({ email }) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#15120d', color: '#f7f3e9', textAlign: 'center', padding: 24 }}>
+      <div style={{ maxWidth: 420 }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+        <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 400, marginBottom: 12 }}>Access Restricted</h2>
+        <p style={{ color: '#c5bca9', fontSize: 14.5, lineHeight: 1.6, marginBottom: 24 }}>
+          The account <strong style={{ color: '#f7f3e9' }}>{email}</strong> doesn't have permission to access this dashboard. Please contact the store owner if you believe this is a mistake.
+        </p>
+        <button onClick={() => hasSupabase && supabase.auth.signOut()}
+          style={{ background: '#c9a86a', color: '#15120d', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          Sign Out
+        </button>
+      </div>
     </div>
   )
 }

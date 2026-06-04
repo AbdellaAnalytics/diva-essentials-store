@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { CreditCard, Wallet, Smartphone, Banknote } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useUI } from '../context/UIContext'
+import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 import { useSettings, computeShipping } from '../lib/useSettings'
 
@@ -21,6 +22,7 @@ const PAYMENTS = [
 export default function Checkout() {
   const { items, subtotal, clear } = useCart()
   const { money } = useUI()
+  const { t } = useLang()
   const { settings } = useSettings()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', notes: '', email: '' })
@@ -125,8 +127,8 @@ export default function Checkout() {
   return (
     <div className="container checkout-wrap" style={{ padding: '46px 24px 80px' }}>
       <div className="checkout-head" style={{ textAlign: 'center', marginBottom: 38 }}>
-        <div className="eyebrow" style={{ color: 'var(--gold-deep)', letterSpacing: '.3em', fontSize: 11, textTransform: 'uppercase' }}>Almost there</div>
-        <h2 className="serif" style={{ fontSize: 'clamp(30px,5vw,44px)', fontWeight: 300, marginTop: 8 }}>Checkout</h2>
+        <div className="eyebrow" style={{ color: 'var(--gold-deep)', letterSpacing: '.3em', fontSize: 11, textTransform: 'uppercase' }}>{t('almost_there')}</div>
+        <h2 className="serif" style={{ fontSize: 'clamp(30px,5vw,44px)', fontWeight: 300, marginTop: 8 }}>{t('checkout')}</h2>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: 52, alignItems: 'start' }}
@@ -135,27 +137,27 @@ export default function Checkout() {
         <div>
           {/* Contact */}
           <section className="co-card">
-            <div className="co-step"><span className="co-num">1</span><h3>Contact</h3></div>
+            <div className="co-step"><span className="co-num">1</span><h3>{t('contact')}</h3></div>
             <div className="co-row">
-              <div className="field"><label>Full Name *</label><input value={form.name} onChange={set('name')} placeholder="Your name" /></div>
-              <div className="field"><label>Phone *</label><input value={form.phone} onChange={set('phone')} placeholder="01XXXXXXXXX" inputMode="tel" /></div>
+              <div className="field"><label>{t('full_name')} *</label><input value={form.name} onChange={set('name')} placeholder="Your name" /></div>
+              <div className="field"><label>{t('phone')} *</label><input value={form.phone} onChange={set('phone')} placeholder="01XXXXXXXXX" inputMode="tel" /></div>
             </div>
-            <div className="field"><label>Email (optional)</label><input value={form.email || ''} onChange={set('email')} placeholder="you@email.com" inputMode="email" /></div>
+            <div className="field"><label>{t('email')} ({t('optional')})</label><input value={form.email || ''} onChange={set('email')} placeholder="you@email.com" inputMode="email" /></div>
           </section>
 
           {/* Delivery */}
           <section className="co-card">
-            <div className="co-step"><span className="co-num">2</span><h3>Delivery Address</h3></div>
-            <div className="field"><label>Street Address *</label><input value={form.address} onChange={set('address')} placeholder="Building, street, area" /></div>
+            <div className="co-step"><span className="co-num">2</span><h3>{t('delivery_address')}</h3></div>
+            <div className="field"><label>{t('address')} *</label><input value={form.address} onChange={set('address')} placeholder="Building, street, area" /></div>
             <div className="co-row">
-              <div className="field"><label>City / Governorate *</label><input value={form.city} onChange={set('city')} placeholder="e.g. Cairo" /></div>
-              <div className="field"><label>Order Notes</label><input value={form.notes} onChange={set('notes')} placeholder="Optional" /></div>
+              <div className="field"><label>{t('city')} *</label><input value={form.city} onChange={set('city')} placeholder="e.g. Cairo" /></div>
+              <div className="field"><label>{t('order_notes')}</label><input value={form.notes} onChange={set('notes')} placeholder="Optional" /></div>
             </div>
           </section>
 
           {/* Payment */}
           <section className="co-card">
-            <div className="co-step"><span className="co-num">3</span><h3>Payment Method</h3></div>
+            <div className="co-step"><span className="co-num">3</span><h3>{t('payment_method')}</h3></div>
             {PAYMENTS.map(opt => {
               const Icon = opt.icon
               return (
@@ -175,7 +177,7 @@ export default function Checkout() {
 
         {/* RIGHT: summary */}
         <div className="co-summary" style={{ position: 'sticky', top: 90 }}>
-          <h3 className="serif" style={{ fontSize: 22, marginBottom: 18 }}>Order Summary</h3>
+          <h3 className="serif" style={{ fontSize: 22, marginBottom: 18 }}>{t('order_summary')}</h3>
           {items.map(i => (
             <div className="co-line" key={i.id}>
               <div className="co-line-img">
@@ -189,14 +191,14 @@ export default function Checkout() {
             </div>
           ))}
           <div style={{ display: 'flex', gap: 8, margin: '18px 0' }}>
-            <input value={promo} onChange={e => setPromo(e.target.value)} placeholder="Promo code" className="co-promo" />
-            <button className="btn btn-ghost" onClick={applyPromo} style={{ padding: '0 18px' }}>Apply</button>
+            <input value={promo} onChange={e => setPromo(e.target.value)} placeholder={t('discount_code')} className="co-promo" />
+            <button className="btn btn-ghost" onClick={applyPromo} style={{ padding: '0 18px' }}>{t('apply')}</button>
           </div>
           <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
-            <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Subtotal</span><span>{money(subtotal)}</span></div>
+            <div className="foot-row"><span style={{ color: 'var(--sub)' }}>{t('subtotal')}</span><span>{money(subtotal)}</span></div>
             {discount > 0 && <div className="foot-row"><span style={{ color: 'var(--green)' }}>Discount ({applied.code})</span><span style={{ color: 'var(--green)' }}>−{money(discount)}</span></div>}
             <div className="foot-row"><span style={{ color: 'var(--sub)' }}>Shipping{form.city ? ` · ${form.city}` : ''}</span><span>{shipping === 0 ? 'Free' : money(shipping)}</span></div>
-            <div className="foot-row total"><span>Total</span><span>{money(total)}</span></div>
+            <div className="foot-row total"><span>{t('total')}</span><span>{money(total)}</span></div>
           </div>
           {belowMin && (
             <div style={{ background: 'var(--paper)', border: '1px solid var(--gold)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--gold-deep)', marginTop: 12 }}>
@@ -204,10 +206,10 @@ export default function Checkout() {
             </div>
           )}
           <button className="btn btn-gold" style={{ width: '100%', marginTop: 14 }} disabled={placing || belowMin} onClick={placeOrder}>
-            {placing ? 'Processing…' : `Place Order · ${money(total)}`}
+            {placing ? 'Processing…' : `${t('place_order')} · ${money(total)}`}
           </button>
           <p style={{ color: 'var(--sub)', fontSize: 12, textAlign: 'center', marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            🔒 Secure checkout · Your details are protected
+            🔒 {t('secure_checkout')}
           </p>
         </div>
       </div>

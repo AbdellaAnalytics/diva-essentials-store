@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck, LayoutGrid, Share2 } from 'lucide-react'
+import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, FileText, Check, Truck, LayoutGrid, Share2, Users } from 'lucide-react'
 import { AC, serif, sans, Panel, Btn, SectionTitle } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { saveSettings, DEFAULT_SETTINGS } from '../../lib/useSettings'
+import { listAdmins, upsertAdmin, deleteAdmin, OWNER_EMAIL, PERMISSION_SECTIONS } from '../lib/permissions'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
@@ -40,6 +41,7 @@ export default function Settings({ data, reload }) {
   const tabs = [
     { id: 'integrations', label: 'Integrations', icon: Plug },
     { id: 'shipping', label: 'Shipping', icon: Truck },
+    { id: 'managers', label: 'Managers', icon: Users },
     { id: 'hero', label: 'Hero Section', icon: Megaphone },
     { id: 'homepage', label: 'Homepage', icon: LayoutGrid },
     { id: 'social', label: 'Social', icon: Share2 },
@@ -59,6 +61,7 @@ export default function Settings({ data, reload }) {
       </div>
       {tab === 'integrations' && <Integrations />}
       {tab === 'shipping' && <ShippingEditor settings={data} />}
+      {tab === 'managers' && <ManagersEditor />}
       {tab === 'hero' && <HeroEditor settings={data} />}
       {tab === 'homepage' && <HomepageEditor settings={data} />}
       {tab === 'social' && <SocialEditor settings={data} />}
@@ -454,6 +457,101 @@ function MediaRow({ url, onUpload, onRemove, uploading, hint: h }) {
         </label>
         {h && <div style={{ background: AC.bg, border: `1px solid ${AC.line}`, borderRadius: 8, padding: '8px 11px', marginTop: 8, fontSize: 12, color: AC.sub, lineHeight: 1.5 }}>📐 {h}</div>}
       </div>
+    </div>
+  )
+}
+
+// ---------------- Managers / permissions editor ----------------
+function ManagersEditor() {
+  const [session, setSession] = useState(null)
+  const [admins, setAdmins] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState('')
+  const [perms, setPerms] = useState(new Set())
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (hasSupabase) supabase.auth.getSession().then(({ data }) => setSession(data.session))
+  }, [])
+  const load = async () => { setLoading(true); setAdmins(await listAdmins()); setLoading(false) }
+  useEffect(() => { load() }, [])
+
+  const myEmail = (session?.user?.email || '').toLowerCase()
+  const isOwner = myEmail && myEmail === OWNER_EMAIL.toLowerCase()
+
+  const togglePerm = (id) => setPerms(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+
+  const addManager = async () => {
+    if (!email.trim()) return
+    if (email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase()) { alert('The owner already has full access.'); return }
+    const res = await upsertAdmin({ email, permissions: [...perms], active: true })
+    if (!res.ok) { alert('Could not save: ' + (res.error?.message || 'error')); return }
+    setEmail(''); setPerms(new Set()); setSaved(true); setTimeout(() => setSaved(false), 1500); load()
+  }
+  const editPerms = async (a, id) => {
+    const next = new Set(a.permissions || []); next.has(id) ? next.delete(id) : next.add(id)
+    await upsertAdmin({ email: a.email, permissions: [...next], active: a.active }); load()
+  }
+  const toggleActive = async (a) => { await upsertAdmin({ email: a.email, permissions: a.permissions, active: !(a.active !== false) }); load() }
+  const removeManager = async (a) => { if (confirm(`Remove ${a.email}?`)) { await deleteAdmin(a.email); load() } }
+
+  if (!isOwner) {
+    return (
+      <Panel title="Managers">
+        <p style={{ color: AC.sub, fontSize: 14 }}>Only the store owner can manage admin accounts and permissions.</p>
+      </Panel>
+    )
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <Panel title="Add a Manager">
+        <p style={{ ...hint, marginBottom: 14 }}>Enter the manager's email (they sign in with their own account), then tick the sections they can access. The owner always has full access.</p>
+        <Field label="Manager Email"><input style={inp} value={email} onChange={e => setEmail(e.target.value)} placeholder="manager@email.com" /></Field>
+        <div style={{ margin: '14px 0 6px', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: AC.sub }}>Permissions</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 8 }}>
+          {PERMISSION_SECTIONS.map(s => (
+            <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: `1px solid ${perms.has(s.id) ? AC.ink : AC.line}`, borderRadius: 9, cursor: 'pointer', fontSize: 13.5, background: perms.has(s.id) ? AC.bg : 'transparent' }}>
+              <input type="checkbox" checked={perms.has(s.id)} onChange={() => togglePerm(s.id)} style={{ accentColor: AC.gold }} /> {s.label}
+            </label>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+          <Btn variant="solid" onClick={addManager}>{saved ? <><Check size={15} /> Added</> : <><Plus size={15} /> Add Manager</>}</Btn>
+        </div>
+      </Panel>
+
+      <Panel title="Current Managers">
+        {loading ? <p style={{ color: AC.sub }}>Loading…</p> : admins.length === 0 ? (
+          <p style={{ color: AC.sub, fontSize: 14 }}>No managers yet. Add one above.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 14 }}>
+            {admins.map(a => (
+              <div key={a.email} style={{ border: `1px solid ${AC.line}`, borderRadius: 12, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: AC.gold + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', color: AC.goldDeep, fontWeight: 600, fontSize: 13 }}>{a.email[0]?.toUpperCase()}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.email}</div>
+                    <div style={{ fontSize: 12, color: a.active !== false ? AC.green : AC.sub }}>{a.active !== false ? 'Active' : 'Disabled'}</div>
+                  </div>
+                  <button onClick={() => toggleActive(a)} style={{ ...btnGhost, fontSize: 12 }}>{a.active !== false ? 'Disable' : 'Enable'}</button>
+                  <button onClick={() => removeManager(a)} style={iconBtn}><Trash2 size={16} color={AC.red} /></button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 6 }}>
+                  {PERMISSION_SECTIONS.map(s => {
+                    const on = (a.permissions || []).includes(s.id)
+                    return (
+                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, cursor: 'pointer', color: on ? AC.ink : AC.sub }}>
+                        <input type="checkbox" checked={on} onChange={() => editPerms(a, s.id)} style={{ accentColor: AC.gold }} /> {s.label}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
     </div>
   )
 }

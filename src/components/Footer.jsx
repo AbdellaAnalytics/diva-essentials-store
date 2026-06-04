@@ -3,6 +3,7 @@ import { Instagram, Facebook, MessageCircle } from 'lucide-react'
 import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
+import { useLang } from '../context/LangContext'
 
 // TikTok isn't in lucide; use a small inline SVG.
 function TikTokIcon({ size = 17 }) {
@@ -18,6 +19,7 @@ export default function Footer() {
   const categories = useCategories(products)
   const { settings } = useSettings()
   const social = settings.social || {}
+  const { t } = useLang()
 
   const links = [
     { key: 'instagram', url: social.instagram, Icon: Instagram, label: 'Instagram' },
@@ -33,8 +35,7 @@ export default function Footer() {
           <div>
             <h4>Diva Essentials</h4>
             <p style={{ maxWidth: 340 }}>
-              Hand-poured luxury scented candles, crafted in Egypt. Quality, warmth,
-              and atmosphere delivered to your door.
+              {t('footer_tagline')}
             </p>
             {links.length > 0 && (
               <div className="social-row">
@@ -47,25 +48,25 @@ export default function Footer() {
             )}
           </div>
           <div>
-            <h4 style={{ fontSize: 16 }}>Shop</h4>
+            <h4 style={{ fontSize: 16 }}>{t('shop')}</h4>
             <ul>
-              <li><Link to="/shop">All Candles</Link></li>
+              <li><Link to="/shop">{t('all_candles')}</Link></li>
               {categories.map(c => (
                 <li key={c.slug}><Link to={`/shop?category=${c.slug}`}>{c.name}</Link></li>
               ))}
             </ul>
           </div>
           <div>
-            <h4 style={{ fontSize: 16 }}>Help</h4>
+            <h4 style={{ fontSize: 16 }}>{t('help')}</h4>
             <ul>
-              <li><Link to="/account">My Account</Link></li>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/returns">Returns &amp; Replacement</Link></li>
+              <li><Link to="/account">{t('my_account')}</Link></li>
+              <li><Link to="/about">{t('about_us')}</Link></li>
+              <li><Link to="/returns">{t('returns')}</Link></li>
             </ul>
           </div>
         </div>
         <div className="foot-bottom">
-          © {new Date().getFullYear()} Diva Essentials. All rights reserved.
+          © {new Date().getFullYear()} Diva Essentials. {t('rights_reserved')}
         </div>
       </div>
     </footer>

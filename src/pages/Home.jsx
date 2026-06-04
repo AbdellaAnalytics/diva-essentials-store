@@ -4,6 +4,7 @@ import { ProductCard } from '../components/Shop'
 import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
+import { useLang } from '../context/LangContext'
 
 const FEATURE_ICONS = { truck: Truck, leaf: Leaf, shield: Shield, heart: Heart, award: Award, clock: Clock, returns: RotateCcw, sparkles: Sparkles }
 
@@ -16,6 +17,7 @@ export default function Home() {
   const promo = settings.promo || {}
   const story = settings.brand_story || {}
   const collections = settings.collections_section || {}
+  const { t } = useLang()
   // Show ALL products on the homepage. Featured ones come first (if any flagged),
   // then the rest — so the section always reflects the full catalog.
   const featured = products.filter(p => p.is_featured)
@@ -55,14 +57,14 @@ export default function Home() {
       <section className="section">
         <div className="container">
           <div className="section-head">
-            <div className="eyebrow">Our Candles</div>
-            <h2>The Collection</h2>
+            <div className="eyebrow">{t('our_candles')}</div>
+            <h2>{t('the_collection')}</h2>
           </div>
           <div className="grid">
             {list.map(p => <ProductCard key={p.id} p={p} />)}
           </div>
           <div style={{ textAlign: 'center', marginTop: 44 }}>
-            <Link to="/shop" className="btn btn-ghost">View All Candles</Link>
+            <Link to="/shop" className="btn btn-ghost">{t('view_all')}</Link>
           </div>
         </div>
       </section>
