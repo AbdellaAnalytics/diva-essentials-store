@@ -311,10 +311,11 @@ function ShippingEditor({ settings }) {
 
 // ---------------- Homepage sections editor ----------------
 function HomepageEditor({ settings }) {
-  const [promo, setPromo] = useState(() => ({ ...(settings?.promo || {}) }))
-  const [features, setFeatures] = useState(() => ({ ...(settings?.features || {}) }))
-  const [story, setStory] = useState(() => ({ ...(settings?.brand_story || {}) }))
-  const [collections, setCollections] = useState(() => ({ ...(settings?.collections_section || {}) }))
+  const s0 = settings || {}
+  const [promo, setPromo] = useState(() => ({ ...(s0.promo || {}) }))
+  const [features, setFeatures] = useState(() => ({ items: [], ...(s0.features || {}) }))
+  const [story, setStory] = useState(() => ({ ...(s0.brand_story || {}) }))
+  const [collections, setCollections] = useState(() => ({ ...(s0.collections_section || {}) }))
   const [saved, setSaved] = useState(false)
   const [uploading, setUploading] = useState('')
 
@@ -340,9 +341,9 @@ function HomepageEditor({ settings }) {
     setSaved(true); setTimeout(() => setSaved(false), 1800)
   }
 
-  const setFeature = (i, k, v) => setFeatures(s => ({ ...s, items: s.items.map((f, idx) => idx === i ? { ...f, [k]: v } : f) }))
+  const setFeature = (i, k, v) => setFeatures(s => ({ ...s, items: (s.items || []).map((f, idx) => idx === i ? { ...f, [k]: v } : f) }))
   const addFeature = () => setFeatures(s => ({ ...s, items: [...(s.items || []), { icon: 'sparkles', title: '', text: '' }] }))
-  const delFeature = (i) => setFeatures(s => ({ ...s, items: s.items.filter((_, idx) => idx !== i) }))
+  const delFeature = (i) => setFeatures(s => ({ ...s, items: (s.items || []).filter((_, idx) => idx !== i) }))
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
