@@ -197,6 +197,19 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
   .pdp { grid-template-columns: 1fr; gap: 28px; }
   .foot-grid { grid-template-columns: 1fr; gap: 34px; }
   .section { padding: 56px 0; }
+  /* products: two per row on phones (like big stores) */
+  .grid { grid-template-columns: 1fr 1fr !important; gap: 22px 12px !important; }
+  .card-name { font-size: 16px !important; }
+  .card-notes { font-size: 11px !important; margin-bottom: 8px !important; }
+  .card-cat { font-size: 9px !important; }
+  .card-body { padding: 12px 2px 0 !important; }
+  .price { font-size: 14px !important; }
+  .card .btn { font-size: 11px !important; padding: 9px 8px !important; letter-spacing: .04em !important; }
+}
+/* very small phones — keep 2 columns but tighter */
+@media (max-width: 380px) {
+  .grid { gap: 18px 10px !important; }
+  .card-name { font-size: 15px !important; }
 }
 
 /* legacy compatibility */
