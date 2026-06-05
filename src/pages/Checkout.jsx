@@ -103,6 +103,17 @@ export default function Checkout() {
         alert('Paymob error: ' + (pay.error || 'unknown')); setPlacing(false); return
       }
 
+      // Stripe — redirect to the hosted Payment Link.
+      // The order is saved as 'unpaid'; customer pays on Stripe's secure page.
+      if (method === 'stripe') {
+        const STRIPE_LINK = 'https://buy.stripe.com/28E3cof7SeKY7Uw9FfbMQ05'
+        // pass the order number + amount so you can match the payment in Stripe
+        const url = `${STRIPE_LINK}?client_reference_id=${encodeURIComponent(orderNumber)}`
+        clear()
+        window.location.href = url
+        return
+      }
+
       // instapay / vodafone -> proof upload; cod -> straight to confirmation
       // Navigate to confirmation FIRST, then clear the cart.
       // (Clearing before navigation makes the empty-cart guard fire and
