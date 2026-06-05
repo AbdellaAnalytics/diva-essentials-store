@@ -83,8 +83,10 @@ export default function AdminDashboard() {
     if (hasSupabase) {
       await supabase.from('orders').update({
         payment_status: decision === 'approved' ? 'paid' : 'unpaid',
-        status: decision === 'approved' ? 'paid' : 'cancelled',
+        status: decision === 'approved' ? 'approved' : 'cancelled',
+        approved: decision === 'approved',
       }).eq('id', orderId)
+      data.reload?.()
     }
   }
 
@@ -194,11 +196,25 @@ function Login() {
   const [email, setEmail] = useState('')
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
+  const [msg, setMsg] = useState('')
+  const [mode, setMode] = useState('signin')  // 'signin' | 'signup'
+  const [busy, setBusy] = useState(false)
+
   const submit = async () => {
-    setErr('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pw })
-    if (error) setErr(error.message)
+    setErr(''); setMsg(''); setBusy(true)
+    if (mode === 'signin') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pw })
+      if (error) setErr(error.message)
+    } else {
+      if (pw.length < 6) { setErr('Password must be at least 6 characters.'); setBusy(false); return }
+      const { error } = await supabase.auth.signUp({ email, password: pw })
+      if (error) setErr(error.message)
+      else setMsg('Account created. You can now sign in. If access is restricted, ask the owner to add your email as a manager.')
+      if (!error) setMode('signin')
+    }
+    setBusy(false)
   }
+
   return (
     <div style={{ minHeight: '100vh', background: AC.sidebar, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: sans, padding: 20 }}>
       <style>{FONTS}</style>
@@ -207,15 +223,28 @@ function Login() {
           <div style={{ fontFamily: serif, fontSize: 30, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>Diva <Flame size={18} color={AC.flame} /></div>
           <div style={{ fontFamily: serif, fontStyle: 'italic', color: AC.goldDeep, fontSize: 14 }}>Essentials · Admin</div>
         </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 22, background: AC.bg, borderRadius: 10, padding: 4 }}>
+          <button onClick={() => { setMode('signin'); setErr(''); setMsg('') }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, background: mode === 'signin' ? '#fff' : 'transparent', color: AC.ink, boxShadow: mode === 'signin' ? '0 1px 3px rgba(0,0,0,.1)' : 'none' }}>Sign In</button>
+          <button onClick={() => { setMode('signup'); setErr(''); setMsg('') }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, background: mode === 'signup' ? '#fff' : 'transparent', color: AC.ink, boxShadow: mode === 'signup' ? '0 1px 3px rgba(0,0,0,.1)' : 'none' }}>Create Account</button>
+        </div>
         {['Email', 'Password'].map((l, i) => (
           <div key={l} style={{ marginBottom: 14 }}>
             <label style={{ display: 'block', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: AC.sub, marginBottom: 6 }}>{l}</label>
             <input type={i ? 'password' : 'email'} value={i ? pw : email} onChange={e => i ? setPw(e.target.value) : setEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && submit()}
               style={{ width: '100%', padding: '11px 13px', border: `1px solid ${AC.line}`, borderRadius: 9, fontSize: 15, fontFamily: 'inherit' }} />
           </div>
         ))}
         {err && <p style={{ color: AC.red, fontSize: 13, marginBottom: 12 }}>{err}</p>}
-        <Btn variant="solid" onClick={submit} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>Sign In</Btn>
+        {msg && <p style={{ color: AC.green, fontSize: 13, marginBottom: 12, lineHeight: 1.5 }}>{msg}</p>}
+        <Btn variant="solid" onClick={submit} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+          {busy ? 'Please wait…' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+        </Btn>
+        {mode === 'signup' && (
+          <p style={{ fontSize: 12, color: AC.sub, marginTop: 14, lineHeight: 1.5, textAlign: 'center' }}>
+            After creating your account, the store owner must add your email as a manager for you to access the dashboard.
+          </p>
+        )}
       </div>
     </div>
   )

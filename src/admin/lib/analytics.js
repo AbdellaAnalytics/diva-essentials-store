@@ -193,8 +193,13 @@ export function acquisitionSeries(customers) {
 
 // ---- Pending payment proofs (approvals queue) ----
 export function pendingApprovals(orders) {
-  return orders.filter(o =>
-    (o.payment_method === 'instapay' || o.payment_method === 'vodafone_cash') &&
-    (o.payment_status === 'unpaid' || o.payment_status === 'awaiting_review' || o.status === 'pending')
-  )
+  return orders.filter(o => {
+    // 1) Transfer orders awaiting proof review (InstaPay / Vodafone)
+    const isTransfer = (o.payment_method === 'instapay' || o.payment_method === 'vodafone_cash')
+    // 2) Card orders (Stripe) where payment isn't confirmed yet
+    const isCardUnpaid = o.payment_method === 'stripe' && o.payment_status !== 'paid'
+    // 3) Any brand-new order still pending (not yet approved/shipped/cancelled)
+    const isNewPending = o.status === 'pending' && !o.approved
+    return isTransfer || isCardUnpaid || isNewPending
+  })
 }
