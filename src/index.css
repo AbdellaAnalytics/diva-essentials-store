@@ -433,3 +433,16 @@ footer.site { background: var(--paper); border-top: 1px solid var(--line); paddi
 .shop-search-x { background: none; border: none; cursor: pointer; color: var(--sub); display: flex; padding: 2px; }
 .shop-search-x:hover { color: var(--ink); }
 [dir="rtl"] .shop-search { direction: rtl; }
+
+/* ---------- footer extras (contact + newsletter) ---------- */
+.foot-grid-4 { grid-template-columns: 1.6fr 1fr 1fr 1.4fr; }
+.foot-contact { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+.foot-contact span, .foot-contact a { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--sub); }
+.foot-contact a:hover { color: var(--gold); }
+.foot-news { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; max-width: 300px; }
+.foot-news input { flex: 1; border: none; outline: none; background: var(--bg); padding: 11px 13px; font-size: 13.5px; color: var(--ink); font-family: inherit; }
+.foot-news button { border: none; background: var(--gold-deep); color: #fff; padding: 0 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.foot-news button:hover { background: var(--gold); }
+@media (max-width: 820px) {
+  .foot-grid-4 { grid-template-columns: 1fr; gap: 34px; }
+}

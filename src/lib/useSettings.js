@@ -34,6 +34,8 @@ export const DEFAULT_SETTINGS = {
 
   // Social links (footer). Empty = hidden.
   social: { instagram: '', facebook: '', tiktok: '', whatsapp: '' },
+  contact_email: 'info@divaessentialsgroup.com',
+  contact_location: 'Cairo, Egypt',
 
   // Homepage sections (each can be toggled + edited from the dashboard)
   promo: {

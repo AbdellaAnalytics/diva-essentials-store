@@ -14,6 +14,8 @@ import Confirmation from './pages/Confirmation'
 import Account from './pages/Account'
 import About from './pages/About'
 import Returns from './pages/Returns'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 // Admin (with its heavy chart/PDF libs) is split into its own chunk and only
 // loaded when visiting /admin — the storefront stays lightweight.
@@ -55,6 +57,8 @@ export default function App() {
         <Route path="/account" element={<Storefront><Account /></Storefront>} />
         <Route path="/about" element={<Storefront><About /></Storefront>} />
         <Route path="/returns" element={<Storefront><Returns /></Storefront>} />
+        <Route path="/privacy" element={<Storefront><Privacy /></Storefront>} />
+        <Route path="/terms" element={<Storefront><Terms /></Storefront>} />
       </Routes>
     </BrowserRouter>
   )
