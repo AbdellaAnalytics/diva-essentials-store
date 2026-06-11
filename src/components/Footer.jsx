@@ -31,7 +31,7 @@ export default function Footer() {
   ].filter(l => l.url)
 
   const storeEmail = settings.contact_email || 'info@divaessentialsgroup.com'
-  const storeLocation = settings.contact_location || 'Cairo, Egypt'
+  const storeLocation = settings.contact_location || '01111151190 '
   const storePhone = settings.contact_phone || ''
 
   const subscribe = () => {
