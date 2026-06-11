@@ -568,10 +568,14 @@ function PagesEditor({ settings }) {
   const [location, setLocation] = useState(settings?.contact_location || 'Cairo, Egypt')
   const [saved, setSaved] = useState(false)
   const save = async () => {
-    await saveSettings({
+    const res = await saveSettings({
       about_html: about, returns_html: returns, privacy_html: privacy, terms_html: terms,
       contact_email: email, contact_phone: phone, contact_location: location,
     })
+    if (!res.ok) {
+      alert('Save failed: ' + (res.error?.message || JSON.stringify(res.error) || 'unknown error'))
+      return
+    }
     setSaved(true); setTimeout(() => setSaved(false), 1800)
   }
 
