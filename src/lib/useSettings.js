@@ -36,6 +36,9 @@ export const DEFAULT_SETTINGS = {
   social: { instagram: '', facebook: '', tiktok: '', whatsapp: '' },
   contact_email: 'info@divaessentialsgroup.com',
   contact_location: 'Cairo, Egypt',
+  contact_phone: '',
+  privacy_html: '',
+  terms_html: '',
 
   // Homepage sections (each can be toggled + edited from the dashboard)
   promo: {
@@ -94,9 +97,12 @@ export function useSettings() {
 // Save helper (admin). Merges patch into settings.data row 1.
 export async function saveSettings(patch) {
   if (!hasSupabase) return { ok: true, demo: true }
-  const { data: cur } = await supabase.from('settings').select('data').eq('id', 1).single()
+  const { data: cur } = await supabase.from('settings').select('data').eq('id', 1).maybeSingle()
   const next = { ...(cur?.data || {}), ...patch }
-  const { error } = await supabase.from('settings').update({ data: next, updated_at: new Date().toISOString() }).eq('id', 1)
+  // upsert so it works whether or not row id=1 already exists
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ id: 1, data: next, updated_at: new Date().toISOString() }, { onConflict: 'id' })
   return { ok: !error, error }
 }
 

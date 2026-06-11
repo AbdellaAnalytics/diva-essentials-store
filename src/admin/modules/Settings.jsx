@@ -561,19 +561,45 @@ function ManagersEditor() {
 function PagesEditor({ settings }) {
   const [about, setAbout] = useState(settings?.about_html || '')
   const [returns, setReturns] = useState(settings?.returns_html || '')
+  const [privacy, setPrivacy] = useState(settings?.privacy_html || '')
+  const [terms, setTerms] = useState(settings?.terms_html || '')
+  const [email, setEmail] = useState(settings?.contact_email || 'info@divaessentialsgroup.com')
+  const [phone, setPhone] = useState(settings?.contact_phone || '')
+  const [location, setLocation] = useState(settings?.contact_location || 'Cairo, Egypt')
   const [saved, setSaved] = useState(false)
-  const save = async () => { await saveSettings({ about_html: about, returns_html: returns }); setSaved(true); setTimeout(() => setSaved(false), 1800) }
+  const save = async () => {
+    await saveSettings({
+      about_html: about, returns_html: returns, privacy_html: privacy, terms_html: terms,
+      contact_email: email, contact_phone: phone, contact_location: location,
+    })
+    setSaved(true); setTimeout(() => setSaved(false), 1800)
+  }
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <p style={{ color: AC.sub, fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>
-        Leave blank to use the built-in professional default text. To customize, write your own — basic HTML works (use &lt;h2&gt; for headings, &lt;p&gt; for paragraphs).
+      <Panel title="Contact Details">
+        <p style={{ ...hint, marginBottom: 14 }}>These appear in your website footer. Leave a field blank to hide it.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 }}>
+          <Field label="Email"><input style={inp} value={email} onChange={e => setEmail(e.target.value)} placeholder="info@divaessentialsgroup.com" /></Field>
+          <Field label="Phone (optional)"><input style={inp} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+20 1XX XXX XXXX" /></Field>
+          <Field label="Location"><input style={inp} value={location} onChange={e => setLocation(e.target.value)} placeholder="Cairo, Egypt" /></Field>
+        </div>
+      </Panel>
+
+      <p style={{ color: AC.sub, fontSize: 13.5, lineHeight: 1.6, margin: '4px 0 0' }}>
+        For the pages below: leave blank to use the built-in professional default text. To customize, write your own — basic HTML works (use &lt;h2&gt; for headings, &lt;p&gt; for paragraphs).
       </p>
       <Panel title="About Page">
-        <textarea rows={8} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={about} onChange={e => setAbout(e.target.value)} placeholder="<p>Your story…</p>  (leave blank for default)" />
+        <textarea rows={7} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={about} onChange={e => setAbout(e.target.value)} placeholder="<p>Your story…</p>  (leave blank for default)" />
       </Panel>
       <Panel title="Returns & Replacement Page">
-        <textarea rows={8} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={returns} onChange={e => setReturns(e.target.value)} placeholder="<p>Your policy…</p>  (leave blank for default)" />
+        <textarea rows={7} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={returns} onChange={e => setReturns(e.target.value)} placeholder="<p>Your policy…</p>  (leave blank for default)" />
+      </Panel>
+      <Panel title="Privacy Policy Page">
+        <textarea rows={7} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={privacy} onChange={e => setPrivacy(e.target.value)} placeholder="<p>Your privacy policy…</p>  (leave blank for default)" />
+      </Panel>
+      <Panel title="Terms & Conditions Page">
+        <textarea rows={7} style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={terms} onChange={e => setTerms(e.target.value)} placeholder="<p>Your terms…</p>  (leave blank for default)" />
       </Panel>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Btn variant="solid" onClick={save}>{saved ? <><Check size={15} /> Saved</> : <><Save size={15} /> Save Pages</>}</Btn>

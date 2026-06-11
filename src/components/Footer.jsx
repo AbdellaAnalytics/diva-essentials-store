@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Instagram, Facebook, MessageCircle, MapPin, Mail } from 'lucide-react'
+import { Instagram, Facebook, MessageCircle, MapPin, Mail, Phone } from 'lucide-react'
 import { useProducts } from '../lib/useProducts'
 import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
@@ -32,6 +32,7 @@ export default function Footer() {
 
   const storeEmail = settings.contact_email || 'info@divaessentialsgroup.com'
   const storeLocation = settings.contact_location || 'Cairo, Egypt'
+  const storePhone = settings.contact_phone || ''
 
   const subscribe = () => {
     if (!email.trim() || !email.includes('@')) return
@@ -48,6 +49,7 @@ export default function Footer() {
             <p style={{ maxWidth: 320 }}>{t('footer_tagline')}</p>
             <div className="foot-contact">
               <span><MapPin size={14} /> {storeLocation}</span>
+              {storePhone && <a href={`tel:${storePhone.replace(/\s/g, '')}`}><Phone size={14} /> {storePhone}</a>}
               <a href={`mailto:${storeEmail}`}><Mail size={14} /> {storeEmail}</a>
             </div>
             {links.length > 0 && (
