@@ -14,9 +14,6 @@ const hasSupabase =
 const PAYMENTS = [
   { id: 'cod',           label: 'Cash on Delivery',     sub: 'Pay when it arrives',             icon: Banknote },
   { id: 'kashier',       label: 'Credit / Debit Card',  sub: 'Visa, Mastercard & wallets',      icon: CreditCard },
-  { id: 'paymob',        label: 'Paymob',               sub: 'Cards & wallets (Egypt)',         icon: Wallet },
-  { id: 'instapay',      label: 'InstaPay / Bank',      sub: 'Transfer + upload proof',         icon: Smartphone },
-  { id: 'vodafone_cash', label: 'Vodafone Cash',        sub: 'Transfer + upload proof',         icon: Smartphone },
 ]
 
 export default function Checkout() {
@@ -120,6 +117,10 @@ export default function Checkout() {
         const base = import.meta.env.VITE_SUPABASE_URL
         const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
         const redirectUrl = `${window.location.origin}/confirmation`
+        // Save order details so /confirmation can show them after returning from Kashier
+        try {
+          localStorage.setItem('diva_last_order', JSON.stringify({ orderNumber, method, total: Number(total) }))
+        } catch (e) { /* ignore */ }
         const res = await fetch(`${base}/functions/v1/kashier-init`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anon}` },
