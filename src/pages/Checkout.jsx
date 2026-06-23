@@ -13,10 +13,10 @@ const hasSupabase =
 
 const PAYMENTS = [
   { id: 'cod',           label: 'Cash on Delivery',     sub: 'Pay when it arrives',             icon: Banknote },
+  { id: 'kashier',       label: 'Credit / Debit Card',  sub: 'Visa, Mastercard & wallets',      icon: CreditCard },
   { id: 'paymob',        label: 'Paymob',               sub: 'Cards & wallets (Egypt)',         icon: Wallet },
   { id: 'instapay',      label: 'InstaPay / Bank',      sub: 'Transfer + upload proof',         icon: Smartphone },
   { id: 'vodafone_cash', label: 'Vodafone Cash',        sub: 'Transfer + upload proof',         icon: Smartphone },
-  { id: 'stripe',        label: 'Credit / Debit Card',  sub: 'Visa, Mastercard — via Stripe',  icon: CreditCard },
 ]
 
 export default function Checkout() {
@@ -112,6 +112,22 @@ export default function Checkout() {
         clear()
         window.location.href = url
         return
+      }
+
+      // Kashier — card/wallet via secure Hosted Payment Page.
+      // The hash is computed by the Edge Function (secret stays server-side).
+      if (method === 'kashier') {
+        const base = import.meta.env.VITE_SUPABASE_URL
+        const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
+        const redirectUrl = `${window.location.origin}/confirmation`
+        const res = await fetch(`${base}/functions/v1/kashier-init`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anon}` },
+          body: JSON.stringify({ orderId: orderNumber, amount: Number(total).toFixed(2), currency: 'EGP', redirectUrl }),
+        })
+        const out = await res.json()
+        if (out.paymentUrl) { clear(); window.location.href = out.paymentUrl; return }
+        alert('Kashier error: ' + (out.error || 'could not start payment')); setPlacing(false); return
       }
 
       // instapay / vodafone -> proof upload; cod -> straight to confirmation
