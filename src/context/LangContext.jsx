@@ -37,7 +37,7 @@ const STRINGS = {
     home: 'Home', loading: 'Loading…', search: 'Search',
     no_results: 'No candles match', clear_search: 'Clear search',
     privacy_policy: 'Privacy Policy', terms: 'Terms & Conditions',
-    new_badge: 'New', from: 'From', select_options: 'Select Options',
+    new_badge: 'New', filter_price: 'Filter by Price', min_price: 'Min', max_price: 'Max', sort_by: 'Sort', sort_default: 'Featured', sort_price_low: 'Price: Low to High', sort_price_high: 'Price: High to Low', sort_newest: 'Newest', product_one: 'product', product_many: 'products',
     newsletter: 'Newsletter', newsletter_text: 'Subscribe for new scents & exclusive offers.', subscribe: 'Subscribe', subscribed: 'Thanks for subscribing! ✨',
   },
   ar: {
@@ -72,7 +72,7 @@ const STRINGS = {
     home: 'الرئيسية', loading: 'جاري التحميل…', search: 'ابحث عن منتج',
     no_results: 'مفيش منتجات مطابقة لـ', clear_search: 'مسح البحث',
     privacy_policy: 'سياسة الخصوصية', terms: 'الشروط والأحكام',
-    new_badge: 'جديد', from: 'يبدأ من', select_options: 'اختر المقاس',
+    new_badge: 'جديد', filter_price: 'فلتر بالسعر', min_price: 'الأقل', max_price: 'الأعلى', sort_by: 'ترتيب', sort_default: 'المميزة', sort_price_low: 'السعر: من الأقل', sort_price_high: 'السعر: من الأعلى', sort_newest: 'الأحدث', product_one: 'منتج', product_many: 'منتج',
     newsletter: 'النشرة البريدية', newsletter_text: 'اشترك لتصلك العطور الجديدة والعروض الحصرية.', subscribe: 'اشتراك', subscribed: 'شكراً لاشتراكك! ✨',
   },
 }

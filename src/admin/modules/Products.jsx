@@ -47,9 +47,6 @@ export default function Products({ data, reload }) {
       stock: Number(form.stock || 0), images: form.images || [],
       is_active: form.is_active !== false, is_featured: !!form.is_featured,
       category_id: catId || null,
-      variants: Array.isArray(form.variants) && form.variants.filter(v => v.label && v.price).length
-        ? form.variants.filter(v => v.label && v.price).map(v => ({ label: v.label.trim(), price: Number(v.price), stock: v.stock === '' || v.stock == null ? null : Number(v.stock) }))
-        : null,
     }
     if (hasSupabase) {
       if (form.id && typeof form.id === 'number') {
@@ -153,7 +150,7 @@ function Thumb({ p }) {
 function ProductEditor({ product, cats, onSave, onClose, busy }) {
   const [f, setF] = useState(() => product || {
     name: '', sku: '', description: '', scent_notes: '', burn_time: '', volume_ml: '', weight_grams: '',
-    price: '', compare_price: '', stock: 0, images: [], variants: [], category_slug: cats[0]?.slug || '',
+    price: '', compare_price: '', stock: 0, images: [], category_slug: cats[0]?.slug || '',
     is_active: true, is_featured: false,
   })
   const [imgUrl, setImgUrl] = useState('')
@@ -211,37 +208,6 @@ function ProductEditor({ product, cats, onSave, onClose, busy }) {
         <Field label="Compare-at Price (EGP)"><input type="number" style={inp} value={f.compare_price || ''} onChange={e => set('compare_price', e.target.value)} placeholder="optional — shows discount" /></Field>
 
         <Field label="Stock"><input type="number" style={inp} value={f.stock} onChange={e => set('stock', e.target.value)} /></Field>
-
-        <div style={{ gridColumn: '1 / -1', border: `1px solid ${AC.line}`, borderRadius: 10, padding: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: AC.sub }}>Sizes / Variants (optional)</span>
-            <Btn size="sm" variant="ghost" onClick={() => {
-              const cur = f.variants || []
-              if (cur.length === 0) {
-                // First click: start with the product's CURRENT size + price so the
-                // base size never disappears from the storefront by mistake.
-                const baseLabel = f.volume_ml ? `${f.volume_ml}ml` : (f.weight_grams ? `${f.weight_grams}g` : '')
-                set('variants', [
-                  { label: baseLabel, price: f.price || '', stock: f.stock ?? '' },
-                  { label: '', price: '', stock: '' },
-                ])
-              } else {
-                set('variants', [...cur, { label: '', price: '', stock: '' }])
-              }
-            }}><Plus size={14} /> Add size</Btn>
-          </div>
-          {(f.variants || []).length === 0 && (
-            <p style={{ fontSize: 12.5, color: AC.sub, margin: 0 }}>⚠️ Sizes REPLACE the single price above — so the list must include ALL sizes (e.g. 100ml / 290, 160ml / 450). Clicking "Add size" starts with the product's current size automatically.</p>
-          )}
-          {(f.variants || []).map((v, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
-              <input style={inp} placeholder="Label (e.g. 160ml)" value={v.label} onChange={e => set('variants', f.variants.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} />
-              <input style={inp} type="number" placeholder="Price EGP" value={v.price} onChange={e => set('variants', f.variants.map((x, j) => j === i ? { ...x, price: e.target.value } : x))} />
-              <input style={inp} type="number" placeholder="Stock (blank = ∞)" value={v.stock ?? ''} onChange={e => set('variants', f.variants.map((x, j) => j === i ? { ...x, stock: e.target.value } : x))} />
-              <button onClick={() => set('variants', f.variants.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} color={AC.red} /></button>
-            </div>
-          ))}
-        </div>
         <Field label="Burn Time"><input style={inp} value={f.burn_time || ''} onChange={e => set('burn_time', e.target.value)} placeholder="40+ hours" /></Field>
 
         <Field label="Volume (ml)"><input type="number" style={inp} value={f.volume_ml || ''} onChange={e => set('volume_ml', e.target.value)} /></Field>

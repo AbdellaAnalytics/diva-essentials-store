@@ -18,8 +18,6 @@ export function ProductCard({ p }) {
   const isNew = p.created_at
     ? (Date.now() - new Date(p.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000
     : false
-  const hasVariants = Array.isArray(p.variants) && p.variants.length > 0
-  const minVarPrice = hasVariants ? Math.min(...p.variants.map(v => Number(v.price))) : 0
   const imgs = Array.isArray(p.images) ? p.images : []
   const img = imgs[0]
   const img2 = imgs[1]
@@ -47,27 +45,17 @@ export function ProductCard({ p }) {
         </Link>
         <p className="card-notes">{p.scent_notes}</p>
         <div className="price-row">
-          {hasVariants
-            ? <span className="price"><small style={{ fontSize: 11, color: 'var(--sub)', letterSpacing: '.06em' }}>{t('from')}</small> {money(minVarPrice)}</span>
-            : <>
-                <span className="price">{money(p.price)}</span>
-                {p.compare_price && <span className="price-old">{money(p.compare_price)}</span>}
-              </>}
+          <span className="price">{money(p.price)}</span>
+          {p.compare_price && <span className="price-old">{money(p.compare_price)}</span>}
         </div>
-        {hasVariants ? (
-          <Link to={`/product/${p.slug}`} className="btn btn-gold" style={{ width: '100%', marginTop: 12, textAlign: 'center' }}>
-            {t('select_options')}
-          </Link>
-        ) : (
-          <button
-            className="btn btn-gold"
-            style={{ width: '100%', marginTop: 12 }}
-            disabled={outOfStock}
-            onClick={() => add(p, 1)}
-          >
-            {outOfStock ? t('sold_out') : t('add_to_cart')}
-          </button>
-        )}
+        <button
+          className="btn btn-gold"
+          style={{ width: '100%', marginTop: 12 }}
+          disabled={outOfStock}
+          onClick={() => add(p, 1)}
+        >
+          {outOfStock ? t('sold_out') : t('add_to_cart')}
+        </button>
       </div>
     </div>
   )
@@ -151,7 +139,6 @@ export function CartDrawer() {
                   <div className="cart2-info">
                     <div className="cart2-top">
                       <strong>{i.name}</strong>
-                      {i.variant && <span style={{ display: 'block', fontSize: 11.5, color: 'var(--sub)', marginTop: 2 }}>{i.variant}</span>}
                       <button className="cart2-del" onClick={() => remove(i.id)} aria-label="Remove"><Trash2 size={17} /></button>
                     </div>
                     {i.category_name && <div className="cart2-variant">{i.category_name}</div>}

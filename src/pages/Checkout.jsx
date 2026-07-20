@@ -79,8 +79,8 @@ export default function Checkout() {
         // save line items
         if (items.length) {
           await supabase.from('order_items').insert(items.map(i => ({
-            order_id: orderId, product_id: typeof (i.base_id ?? i.id) === 'number' ? (i.base_id ?? i.id) : null,
-            name: i.variant ? `${i.name} — ${i.variant}` : i.name, price: i.price, quantity: i.qty, line_total: i.price * i.qty,
+            order_id: orderId, product_id: typeof i.id === 'number' ? i.id : null,
+            name: i.name, price: i.price, quantity: i.qty, line_total: i.price * i.qty,
           })))
         }
       }
