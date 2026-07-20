@@ -41,6 +41,18 @@ export default function Orders({ data, onUpdate }) {
     }
   }
 
+  const cancelOrder = (o) => {
+    if (!confirm(`Cancel order ${o.order_number}? This marks it as cancelled (it won't be counted in sales).`)) return
+    setLocal(p => ({ ...p, [o.id]: 'cancelled' }))
+    onUpdate?.(o.id, 'cancelled')
+  }
+
+  const restoreOrder = (o) => {
+    // bring a cancelled order back to 'pending' so it re-enters the flow
+    setLocal(p => ({ ...p, [o.id]: 'pending' }))
+    onUpdate?.(o.id, 'pending')
+  }
+
   const createShipment = async (o) => {
     if (!confirm(`Create a Bosta shipment for order ${o.order_number}?`)) return
     try {
@@ -122,15 +134,26 @@ export default function Orders({ data, onUpdate }) {
             {
               label: 'Action', align: 'center', render: r => {
                 const idx = STATUS_FLOW.indexOf(r.status)
+                const isCancelled = r.status === 'cancelled'
+                const isDelivered = r.status === 'delivered'
                 return (
                   <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                    {(r.status === 'paid' || r.status === 'pending') && (
-                      <Btn size="sm" variant="ghost" onClick={() => createShipment(r)}>📦 Bosta</Btn>
+                    {isCancelled ? (
+                      <Btn size="sm" variant="ghost" onClick={() => restoreOrder(r)}>↺ Restore</Btn>
+                    ) : (
+                      <>
+                        {(r.status === 'paid' || r.status === 'pending') && (
+                          <Btn size="sm" variant="ghost" onClick={() => createShipment(r)}>📦 Bosta</Btn>
+                        )}
+                        {idx >= 0 && idx < STATUS_FLOW.length - 1 && (
+                          <Btn size="sm" variant="ghost" onClick={() => advance(r)}>→ {STATUS_FLOW[idx + 1]}</Btn>
+                        )}
+                        {!isDelivered && (
+                          <Btn size="sm" variant="ghost" onClick={() => cancelOrder(r)} style={{ color: AC.red }}>✕ Cancel</Btn>
+                        )}
+                        {isDelivered && <span style={{ color: AC.sub, fontSize: 12 }}>—</span>}
+                      </>
                     )}
-                    {idx >= 0 && idx < STATUS_FLOW.length - 1 && (
-                      <Btn size="sm" variant="ghost" onClick={() => advance(r)}>→ {STATUS_FLOW[idx + 1]}</Btn>
-                    )}
-                    {idx === STATUS_FLOW.length - 1 && <span style={{ color: AC.sub, fontSize: 12 }}>—</span>}
                   </div>
                 )
               }
