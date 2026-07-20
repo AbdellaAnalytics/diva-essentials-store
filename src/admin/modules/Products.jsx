@@ -215,10 +215,23 @@ function ProductEditor({ product, cats, onSave, onClose, busy }) {
         <div style={{ gridColumn: '1 / -1', border: `1px solid ${AC.line}`, borderRadius: 10, padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <span style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: AC.sub }}>Sizes / Variants (optional)</span>
-            <Btn size="sm" variant="ghost" onClick={() => set('variants', [...(f.variants || []), { label: '', price: '', stock: '' }])}><Plus size={14} /> Add size</Btn>
+            <Btn size="sm" variant="ghost" onClick={() => {
+              const cur = f.variants || []
+              if (cur.length === 0) {
+                // First click: start with the product's CURRENT size + price so the
+                // base size never disappears from the storefront by mistake.
+                const baseLabel = f.volume_ml ? `${f.volume_ml}ml` : (f.weight_grams ? `${f.weight_grams}g` : '')
+                set('variants', [
+                  { label: baseLabel, price: f.price || '', stock: f.stock ?? '' },
+                  { label: '', price: '', stock: '' },
+                ])
+              } else {
+                set('variants', [...cur, { label: '', price: '', stock: '' }])
+              }
+            }}><Plus size={14} /> Add size</Btn>
           </div>
           {(f.variants || []).length === 0 && (
-            <p style={{ fontSize: 12.5, color: AC.sub, margin: 0 }}>No sizes — the product sells at the single price above. Add sizes (e.g. 100ml / 160ml / 450g) to offer multiple prices; the base price is then ignored on the storefront.</p>
+            <p style={{ fontSize: 12.5, color: AC.sub, margin: 0 }}>⚠️ Sizes REPLACE the single price above — so the list must include ALL sizes (e.g. 100ml / 290, 160ml / 450). Clicking "Add size" starts with the product's current size automatically.</p>
           )}
           {(f.variants || []).map((v, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr auto', gap: 8, marginBottom: 8 }}>
