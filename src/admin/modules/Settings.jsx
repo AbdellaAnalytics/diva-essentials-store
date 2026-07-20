@@ -3,7 +3,7 @@ import { Save, Upload, Plus, Trash2, Image as ImageIcon, Film, Plug, Megaphone, 
 import { AC, serif, sans, Panel, Btn, SectionTitle } from '../ui'
 import { supabase } from '../../lib/supabase'
 import { saveSettings, DEFAULT_SETTINGS } from '../../lib/useSettings'
-import { listAdmins, upsertAdmin, deleteAdmin, OWNER_EMAIL, PERMISSION_SECTIONS } from '../lib/permissions'
+import { listAdmins, upsertAdmin, deleteAdmin, OWNER_EMAIL, isOwnerEmail, PERMISSION_SECTIONS } from '../lib/permissions'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
@@ -478,13 +478,13 @@ function ManagersEditor() {
   useEffect(() => { load() }, [])
 
   const myEmail = (session?.user?.email || '').toLowerCase()
-  const isOwner = myEmail && myEmail === OWNER_EMAIL.toLowerCase()
+  const isOwner = isOwnerEmail(myEmail)
 
   const togglePerm = (id) => setPerms(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
 
   const addManager = async () => {
     if (!email.trim()) return
-    if (email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase()) { alert('The owner already has full access.'); return }
+    if (isOwnerEmail(email.trim())) { alert('This email is already a super-admin.'); return }
     const res = await upsertAdmin({ email, permissions: [...perms], active: true })
     if (!res.ok) { alert('Could not save: ' + (res.error?.message || 'error')); return }
     setEmail(''); setPerms(new Set()); setSaved(true); setTimeout(() => setSaved(false), 1500); load()

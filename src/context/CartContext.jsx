@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useState } from 'react'
+import { Pixel } from '../lib/metaPixel'
 
 const CartCtx = createContext(null)
 export const useCart = () => useContext(CartCtx)
@@ -34,6 +35,7 @@ export function CartProvider({ children }) {
   const add = (product, qty = 1) => {
     dispatch({ type: 'ADD', product, qty })
     setOpen(true)
+    try { Pixel.addToCart(product, qty) } catch (e) {}
   }
   const setQty = (id, qty) => dispatch({ type: 'SET_QTY', id, qty })
   const remove = (id) => dispatch({ type: 'REMOVE', id })

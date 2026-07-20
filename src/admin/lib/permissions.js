@@ -7,7 +7,16 @@ const hasSupabase =
 
 // The store OWNER — full access always, and the only one who can manage managers.
 // Change this to your email. (Lowercased compare.)
-export const OWNER_EMAIL = 'mohamed.abdullah969@gmail.com'
+// Store OWNERS — full access always, and the only ones who can manage managers.
+// Add or remove super-admin emails here (all lowercase).
+export const OWNER_EMAILS = [
+  'mohamed.abdullah969@gmail.com',
+  'azhub.store@gmail.com',
+]
+// Back-compat: some code referenced OWNER_EMAIL (single). Keep it pointing at the first.
+export const OWNER_EMAIL = OWNER_EMAILS[0]
+export const isOwnerEmail = (email) =>
+  !!email && OWNER_EMAILS.includes(email.toLowerCase())
 
 // Sections that can be permissioned. Keep ids in sync with NAV ids in AdminDashboard.
 export const PERMISSION_SECTIONS = [
@@ -27,7 +36,7 @@ export const ALWAYS = ['overview']
 // Returns { loading, allowed, isOwner, perms:Set, email }
 export function useAdminAccess(session) {
   const email = (session?.user?.email || '').toLowerCase()
-  const isOwner = !!email && email === OWNER_EMAIL.toLowerCase()
+  const isOwner = isOwnerEmail(email)
   const [state, setState] = useState({ loading: true, allowed: false, perms: new Set() })
 
   useEffect(() => {

@@ -4,6 +4,10 @@ import { Minus, Plus, ArrowLeft } from 'lucide-react'
 import { useProducts } from '../lib/useProducts'
 import { useCart } from '../context/CartContext'
 import { useUI } from '../context/UIContext'
+import Seo from '../components/Seo'
+import JsonLd, { productSchema } from '../components/JsonLd'
+import { useEffect } from 'react'
+import { Pixel } from '../lib/metaPixel'
 
 export default function Product() {
   const { slug } = useParams()
@@ -14,6 +18,10 @@ export default function Product() {
   const navigate = useNavigate()
 
   const p = products.find(x => x.slug === slug)
+
+  useEffect(() => {
+    if (p) Pixel.viewContent(p)
+  }, [p?.id])
 
   if (loading && !p) return <div className="container empty">Loading…</div>
   if (!p) return (
@@ -27,6 +35,13 @@ export default function Product() {
 
   return (
     <div className="container">
+      <Seo
+        title={`${p.name} — Diva Essentials`}
+        description={p.description || `${p.name}, a hand-poured luxury soy candle by Diva Essentials.`}
+        path={`/product/${p.slug}`}
+        image={Array.isArray(p.images) && p.images[0] ? p.images[0] : undefined}
+      />
+      <JsonLd data={productSchema(p)} id="product-jsonld" />
       <button className="btn btn-ghost" style={{ marginTop: 24 }} onClick={() => navigate(-1)}>
         <ArrowLeft size={16} /> Back
       </button>

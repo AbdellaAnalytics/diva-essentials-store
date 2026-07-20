@@ -6,6 +6,7 @@ import { useCategories } from '../lib/useCategories'
 import { useSettings } from '../lib/useSettings'
 import { useLang } from '../context/LangContext'
 import Seo from '../components/Seo'
+import JsonLd, { organizationSchema } from '../components/JsonLd'
 
 const FEATURE_ICONS = { truck: Truck, leaf: Leaf, shield: Shield, heart: Heart, award: Award, clock: Clock, returns: RotateCcw, sparkles: Sparkles }
 
@@ -28,6 +29,7 @@ export default function Home() {
   return (
     <>
       <Seo title="Diva Essentials — Luxury Scented Candles" description="Hand-poured luxury soy candles crafted in Egypt. Lavender, vanilla & woody scents. Cash on delivery & fast shipping." path="/" />
+      <JsonLd data={organizationSchema()} id="org-jsonld" />
       <section className="hero-media">
         {/* background media */}
         {hero.media_url ? (

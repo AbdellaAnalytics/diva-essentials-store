@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CreditCard, Wallet, Smartphone, Banknote } from 'lucide-react'
 import { useCart } from '../context/CartContext'
@@ -6,6 +6,7 @@ import { useUI } from '../context/UIContext'
 import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 import { useSettings, computeShipping } from '../lib/useSettings'
+import { Pixel } from '../lib/metaPixel'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
@@ -35,6 +36,12 @@ export default function Checkout() {
   const total = subtotal - discount + shipping
   const minOrder = Number(settings?.min_order) || 0
   const belowMin = minOrder > 0 && subtotal < minOrder
+
+  // Fire InitiateCheckout once when the checkout opens with items
+  useEffect(() => {
+    if (items.length) Pixel.initiateCheckout(items, total)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const applyPromo = () => {
     // DIVA10 hardcoded fallback; real validation hits Supabase promo_codes
@@ -119,7 +126,7 @@ export default function Checkout() {
         const redirectUrl = `${window.location.origin}/confirmation`
         // Save order details so /confirmation can show them after returning from Kashier
         try {
-          localStorage.setItem('diva_last_order', JSON.stringify({ orderNumber, method, total: Number(total) }))
+          localStorage.setItem('diva_last_order', JSON.stringify({ orderNumber, method, total: Number(total), items: items.map(i => ({ id: i.id, qty: i.qty })) }))
         } catch (e) { /* ignore */ }
         const res = await fetch(`${base}/functions/v1/kashier-init`, {
           method: 'POST',
@@ -135,6 +142,7 @@ export default function Checkout() {
       // Navigate to confirmation FIRST, then clear the cart.
       // (Clearing before navigation makes the empty-cart guard fire and
       //  shows the "cart is empty" page instead of the confirmation.)
+      try { Pixel.purchase(orderNumber, items, total) } catch (e) {}
       navigate('/confirmation', { state: { orderNumber, method, total, orderId } })
       setTimeout(() => clear(), 0)
     } catch (e) {

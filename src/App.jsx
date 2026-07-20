@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import PixelProvider from './components/PixelProvider'
 import { lazy, Suspense } from 'react'
 import { CartProvider } from './context/CartContext'
 import { UIProvider } from './context/UIContext'
@@ -42,6 +43,7 @@ function Storefront({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <PixelProvider />
       <Routes>
         {/* Admin runs standalone, no storefront chrome */}
         <Route path="/admin" element={

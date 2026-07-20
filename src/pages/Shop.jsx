@@ -41,6 +41,8 @@ export default function Shop() {
   const [maxP, setMaxP] = useState(null)
   const lo = minP == null ? minAll : minP
   const hi = maxP == null ? maxAll : maxP
+  // Only show the price filter when there's an actual price range to filter.
+  const hasPriceRange = maxAll > minAll
 
   const filtered = useMemo(() => {
     let list = active ? products.filter(p => p.category_slug === active) : products.slice()
@@ -90,9 +92,11 @@ export default function Shop() {
 
         {/* toolbar: filters toggle · sort · column switcher */}
         <div className="shop-toolbar">
-          <button className={`shop-tool-btn ${showFilters || priceActive ? 'on' : ''}`} onClick={() => setShowFilters(s => !s)}>
-            <SlidersHorizontal size={15} /> {t('filter_price')}{priceActive ? ' •' : ''}
-          </button>
+          {hasPriceRange ? (
+            <button className={`shop-tool-btn ${showFilters || priceActive ? 'on' : ''}`} onClick={() => setShowFilters(s => !s)}>
+              <SlidersHorizontal size={15} /> {t('filter_price')}{priceActive ? ' •' : ''}
+            </button>
+          ) : <span />}
 
           <div className="shop-toolbar-right">
             <select className="shop-sort" value={sort} onChange={e => setSort(e.target.value)} aria-label={t('sort_by')}>
@@ -109,7 +113,7 @@ export default function Shop() {
         </div>
 
         {/* price filter panel */}
-        {showFilters && (
+        {showFilters && hasPriceRange && (
           <div className="price-panel">
             <div className="price-panel-head">
               <span>{t('filter_price')}</span>

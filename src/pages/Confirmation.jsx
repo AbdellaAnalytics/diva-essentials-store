@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useUI } from '../context/UIContext'
 import { useLang } from '../context/LangContext'
 import { CheckCircle } from 'lucide-react'
+import { Pixel } from '../lib/metaPixel'
 
 function readSavedOrder() {
   try {
@@ -21,15 +22,26 @@ export default function Confirmation() {
   // Read once (state wins; else what we saved before the Kashier redirect).
   // Kept in React state so re-renders (e.g. language toggle) don't lose it.
   const [saved] = useState(() => state || readSavedOrder() || {})
-  useEffect(() => {
-    try { if (saved.orderNumber) localStorage.removeItem('diva_last_order') } catch (e) {}
-  }, [])
   const kashierOrderId = params.get('merchantOrderId') || params.get('orderId')
   const kashierStatus = (params.get('paymentStatus') || params.get('status') || '').toUpperCase()
 
   const orderNumber = saved.orderNumber || kashierOrderId || '—'
   const total = saved.total != null ? saved.total : null
   const method = saved.method || (kashierOrderId ? 'kashier' : 'cod')
+
+  useEffect(() => {
+    // Card purchases return here from Kashier — fire Purchase once (COD already fired at checkout).
+    const cardOk = (saved.method === 'kashier' || saved.method === 'stripe')
+      && (!kashierStatus || kashierStatus === 'SUCCESS')
+    if (cardOk && saved.orderNumber && !sessionStorage.getItem('purch_' + saved.orderNumber)) {
+      try {
+        Pixel.purchase(saved.orderNumber, saved.items || [], saved.total || 0)
+        sessionStorage.setItem('purch_' + saved.orderNumber, '1')
+      } catch (e) {}
+    }
+    try { if (saved.orderNumber) localStorage.removeItem('diva_last_order') } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
 
   const manual = method === 'instapay' || method === 'vodafone_cash'
