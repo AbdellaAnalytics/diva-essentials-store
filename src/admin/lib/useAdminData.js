@@ -1,16 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
-import { generateDemoData } from './demoData'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
   !import.meta.env.VITE_SUPABASE_URL.includes('YOUR_PROJECT')
 
 // Central data source for the whole admin dashboard.
-// Loads products, orders, order_items, customers, categories. Falls back to a
-// rich demo dataset so every chart and report works out of the box.
+// Loads products, orders, order_items, customers, categories, visits — all live.
+const EMPTY = { products: [], orders: [], orderItems: [], customers: [], categories: [], visits: [] }
 export function useAdminData() {
-  const [data, setData] = useState(() => ({ ...generateDemoData(), categories: [], source: 'demo', loading: hasSupabase }))
+  const [data, setData] = useState(() => ({ ...EMPTY, source: 'live', loading: hasSupabase }))
   const [nonce, setNonce] = useState(0)
   const reload = useCallback(() => setNonce(n => n + 1), [])
 
@@ -37,20 +36,6 @@ export function useAdminData() {
           ...p, category_name: p.categories?.name, category_slug: p.categories?.slug,
         }))
 
-        // If there are no real orders yet, keep demo analytics data but use
-        // REAL products/categories so the Products tab manages live catalog.
-        if (!orders.length) {
-          const demo = generateDemoData()
-          if (active) setData({
-            ...demo,
-            products: products.length ? products : demo.products,
-            categories,
-            source: 'demo analytics · live catalog',
-            loading: false,
-          })
-          return
-        }
-
         const customers = custRes.data || []
         const custById = Object.fromEntries(customers.map(c => [c.id, c]))
         const enrichedOrders = orders.map(o => ({
@@ -61,7 +46,7 @@ export function useAdminData() {
 
         if (active) setData({ products, orders: enrichedOrders, orderItems, customers, categories, visits, source: "supabase", loading: false })
       } catch (e) {
-        if (active) setData(d => ({ ...d, source: 'demo (load error)', loading: false }))
+        if (active) setData(d => ({ ...d, source: 'load error', loading: false }))
       }
     })()
     return () => { active = false }
