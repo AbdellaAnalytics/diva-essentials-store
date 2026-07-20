@@ -8,6 +8,7 @@ import { AC, serif, Panel, KpiCard, Btn, SectionTitle, CHART_COLORS, Table } fro
 import {
   kpis, periodComparison, revenueSeries, productPerformance, byCategory,
   byPaymentMethod, byCity, fmtEGP,
+  visitorKpis, visitorSeries, bySource, byDevice, topPages,
 } from '../lib/analytics'
 import { exportCSV, exportPDF } from '../lib/exporters'
 
@@ -159,6 +160,104 @@ export default function Analytics({ data }) {
           rows={products}
         />
       </Panel>
+
+      <VisitorAnalytics data={data} range={range} />
     </div>
+  )
+}
+
+// ==================== VISITOR ANALYTICS SECTION ====================
+function VisitorAnalytics({ data, range }) {
+  const visits = data.visits || []
+  const orders = data.orders || []
+
+  const vk = useMemo(() => visitorKpis(visits, orders, range), [visits, orders, range])
+  const vseries = useMemo(() => visitorSeries(visits, Math.min(range, 60)), [visits, range])
+  const sources = useMemo(() => bySource(visits), [visits])
+  const devices = useMemo(() => byDevice(visits), [visits])
+  const pages = useMemo(() => topPages(visits), [visits])
+
+  const noData = visits.length === 0
+
+  return (
+    <>
+      <div style={{ marginTop: 34, marginBottom: 8 }}>
+        <SectionTitle eyebrow="Traffic" title="Visitor Analytics" />
+      </div>
+
+      {noData ? (
+        <Panel>
+          <p style={{ color: AC.sub, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+            No visitor data yet. Once your site is live with the latest code, every page view is recorded here —
+            you'll see visitors, traffic sources, devices, top pages, and your visitor-to-order conversion rate.
+          </p>
+        </Panel>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 24 }}>
+            <KpiCard label="Visitors" value={vk.visitors.toLocaleString()} sub={`last ${range}d`} accent={AC.blue} />
+            <KpiCard label="Page Views" value={vk.views.toLocaleString()} sub={`${(vk.views / (vk.visitors || 1)).toFixed(1)} per visitor`} accent={AC.ink} />
+            <KpiCard label="Orders" value={vk.ordersInRange} sub="from traffic" accent={AC.gold} />
+            <KpiCard label="Conversion Rate" value={vk.convRate.toFixed(1) + '%'} sub="visitors → orders" accent={AC.green} />
+          </div>
+
+          <Panel title="Visitors & Page Views" style={{ marginBottom: 20 }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={vseries}>
+                <defs>
+                  <linearGradient id="gVis" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={AC.blue} stopOpacity={0.35} />
+                    <stop offset="100%" stopColor={AC.blue} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={AC.line} />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend />
+                <Area type="monotone" dataKey="views" name="Page Views" stroke={AC.ink} fill="none" strokeWidth={1.5} />
+                <Area type="monotone" dataKey="visitors" name="Visitors" stroke={AC.blue} fill="url(#gVis)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Panel>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 20, marginBottom: 20 }}>
+            <Panel title="Traffic Sources">
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Pie data={sources} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={e => e.name}>
+                    {sources.map((s, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+            </Panel>
+            <Panel title="Devices">
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={devices}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={AC.line} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="value" name="Visits" radius={[6, 6, 0, 0]}>
+                    {devices.map((d, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Panel>
+          </div>
+
+          <Panel title="Top Pages">
+            <Table
+              columns={[
+                { label: 'Page', key: 'path' },
+                { label: 'Views', key: 'views', align: 'right' },
+              ]}
+              rows={pages}
+            />
+          </Panel>
+        </>
+      )}
+    </>
   )
 }

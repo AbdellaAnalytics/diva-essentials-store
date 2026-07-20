@@ -203,3 +203,51 @@ export function pendingApprovals(orders) {
     return isTransfer || isCardUnpaid || isNewPending
   })
 }
+
+// ==================== VISITOR ANALYTICS ====================
+
+// Group visits into daily counts of views + unique sessions.
+export function visitorSeries(visits = [], days = 30) {
+  const now = new Date()
+  const buckets = {}
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    buckets[key] = { date: key, views: 0, sessions: new Set() }
+  }
+  visits.forEach(v => {
+    const key = (v.created_at || '').slice(0, 10)
+    if (buckets[key]) { buckets[key].views++; buckets[key].sessions.add(v.session_id) }
+  })
+  return Object.values(buckets).map(b => ({ date: b.date, views: b.views, visitors: b.sessions.size }))
+}
+
+// Totals for a period (in days).
+export function visitorKpis(visits = [], orders = [], days = 30) {
+  const cutoff = Date.now() - days * 864e5
+  const inRange = visits.filter(v => new Date(v.created_at).getTime() >= cutoff)
+  const sessions = new Set(inRange.map(v => v.session_id))
+  const views = inRange.length
+  const visitors = sessions.size
+  // conversion = orders in range / unique visitors
+  const ordersInRange = orders.filter(o => new Date(o.created_at).getTime() >= cutoff).length
+  const convRate = visitors ? (ordersInRange / visitors) * 100 : 0
+  return { views, visitors, ordersInRange, convRate }
+}
+
+// Breakdown helpers → [{ name, value }]
+export function bySource(visits = []) {
+  const m = {}
+  visits.forEach(v => { const s = v.source || 'direct'; m[s] = (m[s] || 0) + 1 })
+  return Object.entries(m).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+}
+export function byDevice(visits = []) {
+  const m = {}
+  visits.forEach(v => { const d = v.device || 'desktop'; m[d] = (m[d] || 0) + 1 })
+  return Object.entries(m).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+}
+export function topPages(visits = [], n = 8) {
+  const m = {}
+  visits.forEach(v => { const p = v.path || '/'; m[p] = (m[p] || 0) + 1 })
+  return Object.entries(m).map(([path, views]) => ({ path, views })).sort((a, b) => b.views - a.views).slice(0, n)
+}

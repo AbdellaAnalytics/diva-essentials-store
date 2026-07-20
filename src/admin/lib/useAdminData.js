@@ -19,13 +19,16 @@ export function useAdminData() {
     let active = true
     ;(async () => {
       try {
-        const [prodRes, ordRes, itemRes, custRes, catRes] = await Promise.all([
+        const since = new Date(Date.now() - 90 * 864e5).toISOString()
+        const [prodRes, ordRes, itemRes, custRes, catRes, visitRes] = await Promise.all([
           supabase.from('products').select('*, categories(name, slug)'),
           supabase.from('orders').select('*'),
           supabase.from('order_items').select('*'),
           supabase.from('customers').select('*'),
           supabase.from('categories').select('*').order('sort_order'),
+          supabase.from('visits').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(20000),
         ])
+        const visits = visitRes?.data || []
 
         const orders = ordRes.data || []
         const orderItems = itemRes.data || []
@@ -56,7 +59,7 @@ export function useAdminData() {
           city: custById[o.customer_id]?.city || o.ship_city || '—',
         }))
 
-        if (active) setData({ products, orders: enrichedOrders, orderItems, customers, categories, source: 'supabase', loading: false })
+        if (active) setData({ products, orders: enrichedOrders, orderItems, customers, categories, visits, source: "supabase", loading: false })
       } catch (e) {
         if (active) setData(d => ({ ...d, source: 'demo (load error)', loading: false }))
       }

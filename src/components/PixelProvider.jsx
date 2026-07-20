@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { initMetaPixel, Pixel } from '../lib/metaPixel'
+import { trackVisit } from '../lib/trackVisit'
 
 const hasSupabase =
   import.meta.env.VITE_SUPABASE_URL &&
@@ -34,9 +35,11 @@ export default function PixelProvider() {
     return () => { active = false }
   }, [])
 
-  // Fire PageView on navigation (after the initial one from init)
+  // Fire PageView on navigation (after the initial one from init) + record visit
   useEffect(() => {
     if (ready) Pixel.pageView()
+    // record our own visitor analytics (not on the admin dashboard)
+    if (!location.pathname.startsWith('/admin')) trackVisit(location.pathname)
   }, [location.pathname, ready])
 
   return null
