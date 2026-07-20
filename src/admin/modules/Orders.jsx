@@ -5,8 +5,17 @@ import { fmtEGP } from '../lib/analytics'
 import { exportCSV } from '../lib/exporters'
 import { format } from 'date-fns'
 
-const STATUS_TONES = { pending: 'warn', paid: 'info', shipped: 'info', delivered: 'ok', cancelled: 'danger' }
+const STATUS_TONES = { pending: 'warn', paid: 'info', approved: 'info', shipped: 'info', delivered: 'ok', cancelled: 'danger', failed: 'danger', amount_mismatch: 'danger' }
 const STATUS_FLOW = ['pending', 'paid', 'shipped', 'delivered']
+
+// Color the Bosta shipment status badge
+function bostaTone(state = '') {
+  const s = state.toLowerCase()
+  if (s.includes('delivered')) return 'ok'
+  if (s.includes('return') || s.includes('lost') || s.includes('damage') || s.includes('exception')) return 'danger'
+  if (s.includes('transit') || s.includes('out for')) return 'info'
+  return 'warn'  // pending / picked up
+}
 
 export default function Orders({ data, onUpdate }) {
   const { orders } = data
@@ -35,14 +44,25 @@ export default function Orders({ data, onUpdate }) {
   const createShipment = async (o) => {
     if (!confirm(`Create a Bosta shipment for order ${o.order_number}?`)) return
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bosta-shipping`, {
+      // COD amount: collect the total only if it's a cash order; 0 if already paid online
+      const codAmount = (o.payment_method === 'cod') ? Number(o.total || 0) : 0
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bosta-ship`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'create', order_id: o.id }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({
+          orderNumber: o.order_number,
+          name: o.ship_name || o.customer_name || '',
+          phone: o.ship_phone || '',
+          email: o.email || '',
+          city: o.ship_city || (o.city !== '—' ? o.city : '') || '',
+          address: o.ship_address || '',
+          notes: o.notes || '',
+          cod: codAmount,
+        }),
       })
       const r = await res.json()
-      if (r.tracking_number) {
-        alert(`Shipment created ✓\nTracking: ${r.tracking_number}`)
+      if (r.ok && r.trackingNumber) {
+        alert(`Shipment created ✓\nTracking: ${r.trackingNumber}`)
         setLocal(p => ({ ...p, [o.id]: 'shipped' }))
       } else {
         alert('Bosta error: ' + (r.error || JSON.stringify(r)))
@@ -82,7 +102,7 @@ export default function Orders({ data, onUpdate }) {
               <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search order / customer" style={{ border: 'none', background: 'transparent', fontSize: 13, outline: 'none', fontFamily: 'inherit', width: 170 }} />
             </div>
             <select value={status} onChange={e => setStatus(e.target.value)} style={{ border: `1px solid ${AC.line}`, borderRadius: 8, padding: '7px 10px', fontSize: 13, background: '#fff', fontFamily: 'inherit' }}>
-              {['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'].map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)} {s !== 'all' ? `(${counts[s] || 0})` : ''}</option>)}
+              {['all', 'pending', 'paid', 'approved', 'shipped', 'delivered', 'cancelled'].map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)} {s !== 'all' ? `(${counts[s] || 0})` : ''}</option>)}
             </select>
           </div>
         }
@@ -96,6 +116,9 @@ export default function Orders({ data, onUpdate }) {
             { label: 'Total', align: 'right', render: r => fmtEGP(r.total) },
             { label: 'Date', render: r => format(new Date(r.created_at), 'MMM d') },
             { label: 'Status', align: 'center', render: r => <Badge tone={STATUS_TONES[r.status]}>{r.status}</Badge> },
+            { label: 'Shipment', align: 'center', render: r => r.bosta_state
+                ? <Badge tone={bostaTone(r.bosta_state)}>{r.bosta_state}{r.bosta_tracking_number ? '' : ''}</Badge>
+                : <span style={{ color: AC.sub, fontSize: 12 }}>—</span> },
             {
               label: 'Action', align: 'center', render: r => {
                 const idx = STATUS_FLOW.indexOf(r.status)

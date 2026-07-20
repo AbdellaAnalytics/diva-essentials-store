@@ -37,6 +37,7 @@ const STRINGS = {
     home: 'Home', loading: 'Loading…', search: 'Search',
     no_results: 'No candles match', clear_search: 'Clear search',
     privacy_policy: 'Privacy Policy', terms: 'Terms & Conditions',
+    new_badge: 'New', from: 'From', select_options: 'Select Options',
     newsletter: 'Newsletter', newsletter_text: 'Subscribe for new scents & exclusive offers.', subscribe: 'Subscribe', subscribed: 'Thanks for subscribing! ✨',
   },
   ar: {
@@ -71,6 +72,7 @@ const STRINGS = {
     home: 'الرئيسية', loading: 'جاري التحميل…', search: 'ابحث عن منتج',
     no_results: 'مفيش منتجات مطابقة لـ', clear_search: 'مسح البحث',
     privacy_policy: 'سياسة الخصوصية', terms: 'الشروط والأحكام',
+    new_badge: 'جديد', from: 'يبدأ من', select_options: 'اختر المقاس',
     newsletter: 'النشرة البريدية', newsletter_text: 'اشترك لتصلك العطور الجديدة والعروض الحصرية.', subscribe: 'اشتراك', subscribed: 'شكراً لاشتراكك! ✨',
   },
 }

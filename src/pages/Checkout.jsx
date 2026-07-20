@@ -79,8 +79,8 @@ export default function Checkout() {
         // save line items
         if (items.length) {
           await supabase.from('order_items').insert(items.map(i => ({
-            order_id: orderId, product_id: typeof i.id === 'number' ? i.id : null,
-            name: i.name, price: i.price, quantity: i.qty, line_total: i.price * i.qty,
+            order_id: orderId, product_id: typeof (i.base_id ?? i.id) === 'number' ? (i.base_id ?? i.id) : null,
+            name: i.variant ? `${i.name} — ${i.variant}` : i.name, price: i.price, quantity: i.qty, line_total: i.price * i.qty,
           })))
         }
       }
@@ -124,7 +124,7 @@ export default function Checkout() {
         const res = await fetch(`${base}/functions/v1/kashier-init`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anon}` },
-          body: JSON.stringify({ orderId: orderNumber, amount: Number(total).toFixed(2), currency: 'EGP', redirectUrl }),
+          body: JSON.stringify({ orderId: orderNumber, currency: 'EGP', redirectUrl }),
         })
         const out = await res.json()
         if (out.paymentUrl) { clear(); window.location.href = out.paymentUrl; return }

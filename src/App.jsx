@@ -5,6 +5,7 @@ import { UIProvider } from './context/UIContext'
 import { LangProvider } from './context/LangContext'
 import { CartDrawer } from './components/Shop'
 import Header from './components/Header'
+import AnnouncementBar from './components/AnnouncementBar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
@@ -27,6 +28,7 @@ function Storefront({ children }) {
     <UIProvider>
       <LangProvider>
       <CartProvider>
+        <AnnouncementBar />
         <Header />
         <CartDrawer />
         <main style={{ minHeight: '60vh' }}>{children}</main>

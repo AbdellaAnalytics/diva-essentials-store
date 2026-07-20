@@ -1,4 +1,5 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useUI } from '../context/UIContext'
 import { useLang } from '../context/LangContext'
 import { CheckCircle } from 'lucide-react'
@@ -17,10 +18,12 @@ export default function Confirmation() {
   const { state } = useLocation()
   const [params] = useSearchParams()
 
-  // 1) in-app navigation (COD etc.) passes state
-  // 2) returning from Kashier: read what we saved before redirect
-  // 3) Kashier may also append params like ?merchantOrderId=&paymentStatus=
-  const saved = state || readSavedOrder() || {}
+  // Read once (state wins; else what we saved before the Kashier redirect).
+  // Kept in React state so re-renders (e.g. language toggle) don't lose it.
+  const [saved] = useState(() => state || readSavedOrder() || {})
+  useEffect(() => {
+    try { if (saved.orderNumber) localStorage.removeItem('diva_last_order') } catch (e) {}
+  }, [])
   const kashierOrderId = params.get('merchantOrderId') || params.get('orderId')
   const kashierStatus = (params.get('paymentStatus') || params.get('status') || '').toUpperCase()
 
@@ -28,8 +31,6 @@ export default function Confirmation() {
   const total = saved.total != null ? saved.total : null
   const method = saved.method || (kashierOrderId ? 'kashier' : 'cod')
 
-  // Clean up after we've shown it once
-  try { if (saved.orderNumber) localStorage.removeItem('diva_last_order') } catch (e) {}
 
   const manual = method === 'instapay' || method === 'vodafone_cash'
   const isCard = method === 'kashier' || method === 'stripe'

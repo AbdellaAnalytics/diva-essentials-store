@@ -20,12 +20,24 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
-    const { orderId, amount, currency = 'EGP', redirectUrl } = await req.json()
+    const { orderId, currency = 'EGP', redirectUrl } = await req.json()
 
-    if (!orderId || !amount) {
-      return new Response(JSON.stringify({ error: 'orderId and amount are required' }),
+    if (!orderId) {
+      return new Response(JSON.stringify({ error: 'orderId is required' }),
         { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } })
     }
+
+    // SECURITY: never trust an amount sent from the browser.
+    // Read the real order total from the database instead.
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+    const supa = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    const { data: ord } = await supa.from('orders')
+      .select('total, payment_status').eq('order_number', orderId).maybeSingle()
+    if (!ord) {
+      return new Response(JSON.stringify({ error: 'order not found' }),
+        { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } })
+    }
+    const amount = Number(ord.total).toFixed(2)
 
     const mid = Deno.env.get('KASHIER_MID')!
     const apiKey = Deno.env.get('KASHIER_API_KEY')!
@@ -36,6 +48,7 @@ Deno.serve(async (req) => {
     const hash = createHmac('sha256', apiKey).update(path).digest('hex')
 
     const baseUrl = 'https://checkout.kashier.io'
+    const webhookUrl = Deno.env.get('KASHIER_WEBHOOK_URL') || ''
     const params = new URLSearchParams({
       merchantId: mid,
       orderId: String(orderId),
@@ -47,6 +60,8 @@ Deno.serve(async (req) => {
       allowedMethods: 'card,wallet',
       display: 'en',
     })
+    // Tell Kashier where to send the secure server-to-server notification.
+    if (webhookUrl) params.set('serverWebhook', webhookUrl)
     const paymentUrl = `${baseUrl}?${params.toString()}`
 
     return new Response(JSON.stringify({ paymentUrl }),

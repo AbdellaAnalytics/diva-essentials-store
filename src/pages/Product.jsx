@@ -15,6 +15,10 @@ export default function Product() {
 
   const p = products.find(x => x.slug === slug)
 
+  // Variants: optional array on the product → [{ label, price, stock }]
+  const variants = Array.isArray(p?.variants) && p.variants.length ? p.variants : null
+  const [selVar, setSelVar] = useState(0)
+
   if (loading && !p) return <div className="container empty">Loading…</div>
   if (!p) return (
     <div className="container empty" style={{ padding: '120px 20px' }}>
@@ -22,8 +26,26 @@ export default function Product() {
     </div>
   )
 
-  const off = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0
-  const outOfStock = p.stock <= 0
+  const v = variants ? variants[Math.min(selVar, variants.length - 1)] : null
+  const curPrice = v ? Number(v.price) : p.price
+  const curStock = v ? (v.stock ?? 99) : p.stock
+  const off = p.compare_price && !v ? Math.round((1 - p.price / p.compare_price) * 100) : 0
+  const outOfStock = curStock <= 0
+
+  const addToCart = () => {
+    if (v) {
+      add({
+        ...p,
+        id: `${p.id}::${v.label}`,      // unique cart line per size
+        base_id: p.id,
+        variant: v.label,
+        price: Number(v.price),
+        stock: curStock,
+      }, qty)
+    } else {
+      add(p, qty)
+    }
+  }
 
   return (
     <div className="container">
@@ -38,10 +60,28 @@ export default function Product() {
           <p style={{ color: 'var(--sub)', fontSize: 16 }}>{p.description}</p>
 
           <div className="price-row">
-            <span className="price">{money(p.price)}</span>
-            {p.compare_price && <span className="price-old">{money(p.compare_price)}</span>}
+            <span className="price">{money(curPrice)}</span>
+            {p.compare_price && !v && <span className="price-old">{money(p.compare_price)}</span>}
             {off > 0 && <span className="badge" style={{ position: 'static' }}>-{off}%</span>}
           </div>
+
+          {variants && (
+            <div className="variants">
+              <span className="variants-label">Size</span>
+              <div className="variants-row">
+                {variants.map((vv, i) => (
+                  <button
+                    key={vv.label}
+                    className={`variant-btn ${i === selVar ? 'on' : ''} ${(vv.stock ?? 99) <= 0 ? 'off' : ''}`}
+                    onClick={() => (vv.stock ?? 99) > 0 && setSelVar(i)}
+                  >
+                    <span>{vv.label}</span>
+                    <small>{money(Number(vv.price))}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="spec">
             <div><span>Scent Notes</span><strong>{p.scent_notes || '—'}</strong></div>
@@ -56,15 +96,15 @@ export default function Product() {
                 <span>{qty}</span>
                 <button onClick={() => setQty(q => q + 1)}><Plus size={16} /></button>
               </div>
-              <button className="btn btn-gold" style={{ flex: 1 }} onClick={() => add(p, qty)}>
-                Add to Cart · {money(p.price * qty)}
+              <button className="btn btn-gold" style={{ flex: 1 }} onClick={addToCart}>
+                Add to Cart · {money(curPrice * qty)}
               </button>
             </div>
           ) : (
             <button className="btn btn-ghost" disabled style={{ width: '100%' }}>Sold Out</button>
           )}
-          {p.stock > 0 && p.stock <= 10 && (
-            <p style={{ color: 'var(--gold)', marginTop: 14, fontSize: 13 }}>Only {p.stock} left in stock</p>
+          {curStock > 0 && curStock <= 10 && (
+            <p style={{ color: 'var(--gold)', marginTop: 14, fontSize: 13 }}>Only {curStock} left in stock</p>
           )}
         </div>
       </div>
